@@ -1,6 +1,6 @@
 # Commonroom architecture
 
-Commonroom is a local group chat per project folder. You and any number of AI
+Commonroom is a local common workspace per project folder. You and any number of AI
 agents (each one a *member* running on a *provider* such as Codex, Claude Code
 or Antigravity, with its own model and effort) share one ordered transcript.
 Every member sees every message and independently decides whether to reply.

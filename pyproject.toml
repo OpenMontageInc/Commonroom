@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "commonroom"
 version = "0.1.0"
-description = "A local group chat for you and your AI agents, across any provider."
+description = "A common workspace for you and your agents across any provider."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}

@@ -1,0 +1,46 @@
+name: Provider request
+description: Ask for Commonroom to support another agent tool (harness)
+labels: ["provider"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Commonroom drives agent tools that are already installed and signed in on your machine.
+        A tool can be supported when it can run a turn without a terminal UI and report its progress in a machine-readable way.
+        If you want to build it yourself, see [docs/ADDING_A_PROVIDER.md](https://github.com/OpenMontageInc/Commonroom/blob/main/docs/ADDING_A_PROVIDER.md).
+  - type: input
+    id: harness
+    attributes:
+      label: Which tool?
+      placeholder: e.g. GitHub Copilot CLI, Cursor CLI, Gemini CLI, OpenCode
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link to the tool or its CLI documentation
+    validations:
+      required: true
+  - type: textarea
+    id: headless
+    attributes:
+      label: Headless / streaming mode
+      description: |
+        Can it run without its interactive UI and stream events (JSON lines, JSON-RPC, ACP, stream-json...)?
+        Can it resume a saved session, be interrupted mid-turn, and ask permission questions over that channel?
+      placeholder: e.g. `tool --output-format stream-json`, sessions resumed with `--resume <id>`
+    validations:
+      required: true
+  - type: textarea
+    id: models
+    attributes:
+      label: How does it report models?
+      description: Is there a command or protocol message that lists the available models and effort/reasoning levels?
+    validations:
+      required: false
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd like to implement this provider myself.

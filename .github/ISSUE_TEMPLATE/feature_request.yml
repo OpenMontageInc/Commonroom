@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest an improvement to Commonroom
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea? If it's open-ended or you want to discuss direction first, start a thread in
+        [Discussions](https://github.com/OpenMontageInc/Commonroom/discussions).
+        Use this form for a concrete, actionable request. To ask for support for a new agent tool, use the **Provider request** form.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem does this solve, or what is missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the change you'd like and how it would look in the room.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you've thought about.
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links, mockups, references, or examples.
+    validations:
+      required: false

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "commonroom"
+version = "0.1.0"
+description = "A local group chat for you and your AI agents, across any provider."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+dependencies = []
+
+[project.scripts]
+commonroom = "commonroom.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["commonroom*"]
+
+[tool.setuptools.package-data]
+commonroom = ["web/*", "web/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

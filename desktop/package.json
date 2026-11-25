@@ -1,0 +1,20 @@
+{
+  "name": "commonroom",
+  "productName": "Commonroom",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A common workspace for you and your agents across any provider",
+  "license": "Apache-2.0",
+  "author": "Commonroom contributors",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"test/*.test.cjs\"",
+    "package:win": "electron-builder --config electron-builder.config.cjs --win nsis --x64",
+    "package:mac": "electron-builder --config electron-builder.config.cjs --mac dmg"
+  },
+  "devDependencies": {
+    "electron": "45.5.0",
+    "electron-builder": "26.18.1"
+  }
+}

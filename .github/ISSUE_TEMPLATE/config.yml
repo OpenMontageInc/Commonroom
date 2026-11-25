@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & help
+    url: https://github.com/OpenMontageInc/Commonroom/discussions
+    about: Ask setup, usage or troubleshooting questions in Discussions.
+  - name: Report a security vulnerability
+    url: https://github.com/OpenMontageInc/Commonroom/security/policy
+    about: Please report vulnerabilities privately, not as a public issue.

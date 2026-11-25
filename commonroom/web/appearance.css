@@ -1,0 +1,1156 @@
+/*
+ * Commonroom appearance layer
+ * Neutral light and dark themes for the existing markup in index.html.
+ * Load this file AFTER the inline <style> block. Dark theme: html[data-theme="dark"].
+ *
+ * Tokens use html:root (and html:root[data-theme]) so they win over the inline
+ * :root block regardless of load order. Component rules match the inline
+ * selectors and rely on loading after them.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Tokens: light (default)                                             */
+/* ------------------------------------------------------------------ */
+html:root {
+  color-scheme: light;
+
+  /* Rail: very pale neutral */
+  --rail-bg: #f9f9f9;
+  --rail-bg-deep: #f9f9f9;
+  --rail-text: #0d0d0d;
+  --rail-text-2: #424242;
+  --rail-text-3: #6b6b6b;
+  --rail-hover: #efefef;
+  --rail-active: #e6e6e6;
+  --rail-line: #ebebeb;
+  --rail-live: #12704f;
+  --rail-warn: #8a4f00;
+  --rail-err: #b3261e;
+  --rail-err-bg: rgba(179, 38, 30, 0.07);
+
+  /* Canvas */
+  --bg-canvas: #ffffff;
+  --bg-paper-warm: #fafafa;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f4f4f4;
+  --bg-hover: #f7f7f7;
+  --bg-active: #efefef;
+  --bg-human: #f4f4f4;
+  --bg-human-hover: #efefef;
+  --bg-input: #ffffff;
+  --bg-composer: #ffffff;
+  --bg-modal: #ffffff;
+  --bg-popover: #ffffff;
+  --border: #ececec;
+  --border-strong: #dadada;
+  --border-hover: #c2c2c2;
+
+  /* Text */
+  --text-primary: #0d0d0d;
+  --text-secondary: #4a4a4a;
+  --text-muted: #6b6b6b;
+  --text-faint: #a8a8a8;
+
+  /* Actions: near-black primary, blue only for focus, links and mentions */
+  --accent: #0d0d0d;
+  --accent-hover: #2e2e2e;
+  --on-accent: #ffffff;
+  --accent-dim: #f0f0f0;
+  --accent-border: #d0d0d0;
+  --focus: #0a66d8;
+  --focus-ring: rgba(10, 102, 216, 0.22);
+  --link: #0a5cc2;
+  --mention: #0a5cc2;
+  --mention-dim: #e8f1fc;
+  --selection: rgba(10, 102, 216, 0.16);
+
+  --live: #12704f;
+
+  --danger: #b3261e;
+  --danger-solid: #b3261e;
+  --danger-solid-hover: #951d16;
+  --danger-dim: #fdf2f1;
+  --danger-border: #f0c7c3;
+  --danger-text: #7d1f19;
+
+  --amber: #8a4f00;
+  --amber-dot: #d98a1c;
+  --amber-dim: #fff7ea;
+  --amber-hover: #ffefd4;
+  --amber-border: #efd5a6;
+  --request-bg: #fffcf6;
+
+  --code-bg: #f7f7f8;
+  --code-text: #1f1f1f;
+
+  --send-disabled-bg: #ececec;
+  --send-disabled-fg: #a3a3a3;
+
+  --human-avatar-bg: #0d0d0d;
+  --human-avatar-fg: #ffffff;
+  --rail-human-avatar-bg: #e3e3e3;
+  --rail-human-avatar-fg: #1a1a1a;
+  --avatar-ring: rgba(0, 0, 0, 0.06);
+
+  --scrollbar: rgba(0, 0, 0, 0.18);
+  --backdrop: rgba(0, 0, 0, 0.28);
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23525252' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+
+  --font-serif: var(--font-sans);
+  --measure: 72ch;
+  --conversation-w: 768px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-composer: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 20px rgba(0, 0, 0, 0.05);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --shadow-drawer: 18px 0 48px rgba(0, 0, 0, 0.16);
+}
+
+/* ------------------------------------------------------------------ */
+/* Tokens: dark                                                        */
+/* ------------------------------------------------------------------ */
+html:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --rail-bg: #171717;
+  --rail-bg-deep: #171717;
+  --rail-text: #ececec;
+  --rail-text-2: #c9c9c9;
+  --rail-text-3: #9a9a9a;
+  --rail-hover: rgba(255, 255, 255, 0.05);
+  --rail-active: rgba(255, 255, 255, 0.10);
+  --rail-line: #262626;
+  --rail-live: #6fd3a8;
+  --rail-warn: #f5c987;
+  --rail-err: #ff9b91;
+  --rail-err-bg: rgba(255, 120, 110, 0.10);
+
+  --bg-canvas: #212121;
+  --bg-paper-warm: #242424;
+  --bg-surface: #262626;
+  --bg-surface-2: #2e2e2e;
+  --bg-hover: #282828;
+  --bg-active: #323232;
+  --bg-human: #2a2a2a;
+  --bg-human-hover: #2f2f2f;
+  --bg-input: #1d1d1d;
+  --bg-composer: #2c2c2c;
+  --bg-modal: #262626;
+  --bg-popover: #2a2a2a;
+  --border: #333333;
+  --border-strong: #424242;
+  --border-hover: #575757;
+
+  --text-primary: #ececec;
+  --text-secondary: #c4c4c4;
+  --text-muted: #9e9e9e;
+  --text-faint: #686868;
+
+  --accent: #ececec;
+  --accent-hover: #ffffff;
+  --on-accent: #121212;
+  --accent-dim: #2e2e2e;
+  --accent-border: #4a4a4a;
+  --focus: #6aa8ff;
+  --focus-ring: rgba(106, 168, 255, 0.35);
+  --link: #8ab8ff;
+  --mention: #a3c9ff;
+  --mention-dim: rgba(106, 168, 255, 0.16);
+  --selection: rgba(106, 168, 255, 0.32);
+
+  --live: #4cc38a;
+
+  --danger: #ff8a80;
+  --danger-solid: #d63b40;
+  --danger-solid-hover: #bf3237;
+  --danger-dim: rgba(255, 90, 80, 0.10);
+  --danger-border: rgba(255, 120, 110, 0.32);
+  --danger-text: #ffb4ab;
+
+  --amber: #f2c27a;
+  --amber-dot: #e0a03a;
+  --amber-dim: rgba(240, 167, 58, 0.10);
+  --amber-hover: rgba(240, 167, 58, 0.18);
+  --amber-border: rgba(240, 167, 58, 0.34);
+  --request-bg: rgba(240, 167, 58, 0.06);
+
+  --code-bg: #181818;
+  --code-text: #e6e6e6;
+
+  --send-disabled-bg: #3a3a3a;
+  --send-disabled-fg: #7c7c7c;
+
+  --human-avatar-bg: #ececec;
+  --human-avatar-fg: #121212;
+  --rail-human-avatar-bg: #3a3a3a;
+  --rail-human-avatar-fg: #ececec;
+  --avatar-ring: rgba(255, 255, 255, 0.06);
+
+  --scrollbar: rgba(255, 255, 255, 0.16);
+  --backdrop: rgba(0, 0, 0, 0.6);
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23b0b0b0' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+
+  --shadow-sm: none;
+  --shadow-composer: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --shadow-drawer: 18px 0 48px rgba(0, 0, 0, 0.5);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+:focus-visible {
+  outline-color: var(--focus);
+}
+
+::selection {
+  background: var(--selection);
+  color: inherit;
+}
+
+.app {
+  background: var(--bg-canvas);
+}
+
+/* ------------------------------------------------------------------ */
+/* Rail                                                                */
+/* ------------------------------------------------------------------ */
+.rail {
+  background: var(--rail-bg);
+  border-right: 1px solid var(--rail-line);
+}
+
+.rail :focus-visible {
+  outline-color: var(--focus);
+}
+
+.rail-header {
+  height: 56px;
+  padding: 0 12px 0 20px;
+  border-bottom: 0;
+}
+
+.brand-title {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.rail-close-btn {
+  border-radius: 999px;
+}
+
+.rail-section-head {
+  padding: 14px 10px 6px 20px;
+}
+
+.rail-agents-head {
+  margin-top: 8px;
+  padding-top: 16px;
+}
+
+.rail-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--rail-text-3);
+}
+
+.rail-count {
+  color: var(--rail-text-3);
+}
+
+/* Rail actions: Add project, Add agent, rename, remove */
+.add-agent-btn {
+  height: 28px;
+  padding: 0 10px 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rail-text-2);
+  font-size: 12.5px;
+  font-weight: 550;
+}
+
+.add-agent-btn:hover:not(:disabled) {
+  background: var(--rail-hover);
+  color: var(--rail-text);
+}
+
+.add-agent-btn:active:not(:disabled) {
+  background: var(--rail-active);
+}
+
+.add-agent-btn:disabled {
+  opacity: 0.45;
+}
+
+.rail-project-list,
+.member-list {
+  padding-left: 10px;
+  padding-right: 10px;
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+/* Compact project links with a legible selected state */
+.rail-project-link {
+  min-height: 32px;
+  padding: 5px 10px;
+  gap: 9px;
+  border-radius: 10px;
+  color: var(--rail-text-2);
+  font-size: 13.5px;
+}
+
+.rail-project-link:hover {
+  background: var(--rail-hover);
+  color: var(--rail-text);
+}
+
+.rail-project-link[aria-current="page"] {
+  background: var(--rail-active);
+  color: var(--rail-text);
+  font-weight: 600;
+}
+
+.rail-project-link[aria-current="page"]::before {
+  content: none;
+}
+
+.rail-project-icon,
+.rail-project-link:hover .rail-project-icon {
+  color: var(--rail-text-3);
+}
+
+.rail-project-link[aria-current="page"] .rail-project-icon {
+  color: var(--rail-text);
+}
+
+.rail-project-hint {
+  font-size: 11.5px;
+  font-weight: 450;
+  color: var(--rail-text-3);
+}
+
+.rail-project-link[aria-current="page"] .rail-project-hint {
+  color: var(--rail-text-2);
+}
+
+/* Members */
+.member-empty {
+  border: 1px dashed var(--border-strong);
+  color: var(--rail-text-2);
+  border-radius: var(--radius-md);
+}
+
+.member-row {
+  padding: 6px 6px 6px 8px;
+  border-radius: 10px;
+}
+
+.member-row.is-busy {
+  background: var(--rail-active);
+}
+
+.member-row.is-error {
+  background: var(--rail-err-bg);
+}
+
+.member-name {
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.member-meta {
+  color: var(--rail-text-3);
+}
+
+.member-name, .member-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (hover: hover) {
+  .member-action {
+    position: absolute;
+    right: 5px;
+  }
+  .member-row:hover .member-action, .member-row:focus-within .member-action {
+    border-radius: 6px;
+    background: var(--rail-hover);
+  }
+}
+
+.member-activity {
+  color: var(--rail-live);
+}
+
+.member-activity.is-error {
+  color: var(--rail-err);
+}
+
+.member-activity.is-waiting {
+  color: var(--rail-warn);
+}
+
+.member-icon-btn {
+  border-radius: 999px;
+  color: var(--rail-text-3);
+}
+
+.rename-member-btn:hover {
+  background: var(--rail-active);
+  color: var(--rail-text);
+}
+
+.remove-member-btn:hover {
+  background: var(--rail-err-bg);
+  color: var(--rail-err);
+}
+
+/* Avatars */
+.main .avatar-svg,
+dialog .avatar-svg {
+  box-shadow: 0 0 0 1px var(--avatar-ring);
+}
+
+.avatar-css {
+  background: var(--human-avatar-bg);
+  color: var(--human-avatar-fg);
+}
+
+.rail .avatar-css {
+  background: var(--rail-human-avatar-bg);
+  color: var(--rail-human-avatar-fg);
+}
+
+.status-dot,
+.rail-footer .status-dot {
+  border-color: var(--rail-bg);
+}
+
+.main .status-dot,
+dialog .status-dot {
+  border-color: var(--bg-canvas);
+}
+
+/* Footer: profile plus appearance toggle */
+.rail-footer {
+  padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)) 18px;
+  gap: 10px;
+  border-top: 1px solid var(--rail-line);
+}
+
+.profile-name {
+  font-size: 13.5px;
+}
+
+.profile-pill {
+  color: var(--rail-text-3);
+}
+
+#appearanceBtn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-left: 2px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rail-text-2);
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+
+#appearanceBtn:hover {
+  background: var(--rail-hover);
+  color: var(--rail-text);
+}
+
+#appearanceBtn:active {
+  background: var(--rail-active);
+}
+
+#appearanceBtn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.rail-backdrop {
+  background: var(--backdrop);
+}
+
+/* ------------------------------------------------------------------ */
+/* Main canvas: flat, no inset card                                    */
+/* ------------------------------------------------------------------ */
+.main {
+  background: var(--bg-canvas);
+}
+
+@media (min-width: 781px) {
+  .main {
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
+.topbar {
+  height: 56px;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-canvas);
+}
+
+.room-title {
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.room-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.menu-btn,
+.project-header-btn {
+  border-radius: 999px;
+  color: var(--text-secondary);
+}
+
+.menu-btn:hover,
+.project-header-btn:hover {
+  background: var(--bg-active);
+  color: var(--text-primary);
+}
+
+.request-jump-btn {
+  background: var(--amber-dim);
+  border-color: var(--amber-border);
+  color: var(--amber);
+}
+
+.request-jump-btn:hover {
+  background: var(--amber-hover);
+  border-color: var(--amber-dot);
+}
+
+.sync-badge {
+  color: var(--text-muted);
+}
+
+.net-banner {
+  padding: 8px 32px;
+}
+
+.net-banner-dismiss {
+  border-radius: 999px;
+}
+
+.net-banner-dismiss:hover {
+  background: var(--danger-dim);
+}
+
+/* Feed */
+.feed-scroll {
+  padding: 16px 40px 32px;
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+.feed-inner {
+  max-width: var(--conversation-w);
+}
+
+/* Starter state */
+.empty-state {
+  max-width: 460px;
+  padding: 64px 24px;
+}
+
+.empty-title {
+  margin-bottom: 10px;
+  font-size: 28px;
+  font-weight: 460;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.empty-copy {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.empty-state .btn-primary {
+  margin-top: 24px;
+  height: 40px;
+  padding: 0 20px;
+}
+
+/* Messages */
+/* Give an empty project a single focal point. After the first message,
+   the scrollable transcript takes the space and the composer stays below it. */
+@media (min-height: 490px) {
+  .main:has(#emptyState:not(.hidden) #firstProjectBtn[hidden]):has(#composerInput:enabled) .feed-scroll {
+    flex: 0 1 auto;
+    margin-top: auto;
+    padding-bottom: 0;
+  }
+  .main:has(#emptyState:not(.hidden) #firstProjectBtn[hidden]):has(#composerInput:enabled) .empty-state {
+    max-width: none;
+    padding: 16px 12px;
+  }
+  .main:has(#emptyState:not(.hidden) #firstProjectBtn[hidden]):has(#composerInput:enabled) .composer-wrap {
+    margin-bottom: auto;
+  }
+}
+.day-divider {
+  margin: 26px 0 12px;
+  color: var(--text-muted);
+  font-weight: 550;
+  letter-spacing: 0;
+}
+
+.msg-row {
+  border-radius: 14px;
+}
+
+.msg-row:hover {
+  background: var(--bg-hover);
+}
+
+.msg-row.is-human {
+  background: var(--bg-human);
+}
+
+.msg-row.is-human:hover {
+  background: var(--bg-human-hover);
+}
+
+.msg-author {
+  font-size: 14.5px;
+  font-weight: 650;
+}
+
+.msg-author.is-human {
+  color: var(--text-primary);
+}
+
+.msg-model-tag + .msg-time::before {
+  color: var(--text-faint);
+}
+
+.msg-content a {
+  color: var(--link);
+  text-decoration-color: color-mix(in srgb, var(--link) 40%, transparent);
+}
+
+.msg-content a:hover {
+  text-decoration-color: currentColor;
+}
+
+.msg-content :is(h1, h2) {
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.msg-content h1 { font-size: 1.32em; }
+.msg-content h2 { font-size: 1.18em; }
+
+.msg-content blockquote {
+  border-inline-start-color: var(--border-strong);
+}
+
+.msg-mention {
+  color: var(--mention);
+  background: var(--mention-dim);
+  border-radius: 5px;
+  padding: 0 4px;
+}
+
+.msg-inline-code {
+  background: var(--bg-surface-2);
+  border-color: var(--border);
+  color: var(--code-text);
+}
+
+.msg-code-block {
+  background: var(--code-bg);
+  border-color: var(--border);
+  border-radius: 12px;
+  color: var(--code-text);
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+/* Job states */
+.job-card {
+  border-radius: 14px;
+  background: var(--bg-surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.job-card.is-active {
+  background: var(--bg-paper-warm);
+}
+
+.job-card.is-waiting {
+  background: var(--amber-dim);
+  border-color: var(--amber-border);
+}
+
+.job-card.is-error {
+  background: var(--danger-dim);
+  border-color: var(--danger-border);
+}
+
+.job-card.is-error .job-detail {
+  color: var(--danger-text);
+}
+
+.job-action-btn {
+  border-radius: 999px;
+  border-color: var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.job-action-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.job-card.is-error .job-action-btn:not(.is-dismiss) {
+  background: var(--danger-solid);
+  border-color: var(--danger-solid);
+  color: #ffffff;
+}
+
+.job-card.is-error .job-action-btn:not(.is-dismiss):hover:not(:disabled) {
+  background: var(--danger-solid-hover);
+  border-color: var(--danger-solid-hover);
+}
+
+.job-action-btn.is-dismiss {
+  background: transparent;
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.job-action-btn.is-dismiss:hover:not(:disabled) {
+  background: var(--danger-dim);
+  border-color: var(--danger);
+}
+
+/* Pending requests */
+.request-card {
+  background: var(--request-bg);
+  border-color: var(--amber-border);
+  box-shadow: inset 3px 0 0 var(--amber-dot), var(--shadow-sm);
+}
+
+.request-choice input {
+  accent-color: var(--accent);
+}
+
+.request-input input,
+.request-input textarea {
+  border-radius: 10px;
+  border-color: var(--border-strong);
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.request-input input:hover,
+.request-input textarea:hover {
+  border-color: var(--border-hover);
+}
+
+.request-input input:focus,
+.request-input textarea:focus {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* Jump to latest */
+.jump-bottom-btn {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.jump-bottom-btn:hover {
+  background: var(--accent-hover);
+}
+
+/* ------------------------------------------------------------------ */
+/* Composer: rounded pill with a round send button                     */
+/* ------------------------------------------------------------------ */
+.composer-wrap {
+  padding: 6px 40px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg-canvas);
+}
+
+.composer-shell {
+  max-width: var(--conversation-w);
+}
+
+.composer-box {
+  align-items: flex-end;
+  gap: 8px;
+  min-height: 54px;
+  padding: 8px 8px 8px 20px;
+  background: var(--bg-composer);
+  border: 1px solid var(--border-strong);
+  border-radius: 28px;
+  box-shadow: var(--shadow-composer);
+}
+
+.composer-box:hover {
+  border-color: var(--border-hover);
+}
+
+.composer-box:focus-within {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px var(--focus-ring), var(--shadow-composer);
+}
+
+.composer-input {
+  align-self: center;
+  padding: 6px 0;
+  color: var(--text-primary);
+}
+
+.composer-input::placeholder {
+  color: var(--text-muted);
+}
+
+.composer-input:disabled {
+  cursor: not-allowed;
+}
+
+.send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.send-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.send-btn:disabled {
+  background: var(--send-disabled-bg);
+  color: var(--send-disabled-fg);
+}
+
+.composer-foot {
+  justify-content: center;
+  padding-top: 8px;
+  color: var(--text-muted);
+}
+
+.composer-foot kbd {
+  color: var(--text-secondary);
+}
+
+/* Mention menu */
+.mention-popover {
+  background: var(--bg-popover);
+  border-color: var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-float);
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+.mention-item {
+  border-radius: 9px;
+  color: var(--text-primary);
+}
+
+.mention-item:hover {
+  background: var(--bg-hover);
+}
+
+.mention-item.is-selected {
+  background: var(--bg-active);
+}
+
+.mention-item-meta {
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Dialogs, fields and buttons                                         */
+/* ------------------------------------------------------------------ */
+dialog.modal {
+  border-radius: 18px;
+  background: var(--bg-modal);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-modal);
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+dialog.modal::backdrop {
+  background: var(--backdrop);
+}
+
+.modal-header {
+  padding: 20px 22px 2px 24px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.modal-close {
+  border-radius: 999px;
+  color: var(--text-muted);
+}
+
+.modal-close:hover {
+  background: var(--bg-active);
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 14px 24px 20px;
+}
+
+.modal-footer {
+  padding: 14px 24px 20px;
+  border-top: 0;
+}
+
+.field label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.field input,
+.field select {
+  border-radius: 10px;
+  border-color: var(--border-strong);
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.field select {
+  background-image: var(--chevron);
+}
+
+.field select option {
+  background: var(--bg-modal);
+  color: var(--text-primary);
+}
+
+.field input:hover,
+.field select:hover {
+  border-color: var(--border-hover);
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.field input::placeholder,
+.request-input input::placeholder,
+.request-input textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.field-preview {
+  border-radius: 14px;
+  background: var(--bg-surface-2);
+}
+
+.field-preview-text {
+  color: var(--text-secondary);
+}
+
+.modal-error {
+  border-radius: 10px;
+  background: var(--danger-dim);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+/* Project chooser */
+.project-list {
+  gap: 2px;
+}
+
+.project-link {
+  padding: 9px 12px;
+  border-radius: 12px;
+  color: var(--text-primary);
+}
+
+.project-link:hover {
+  background: var(--bg-hover);
+}
+
+.project-link[aria-current="page"] {
+  background: var(--bg-active);
+  border-color: transparent;
+}
+
+.project-link-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.project-link-path {
+  color: var(--text-muted);
+}
+
+.project-link-current {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Buttons: mostly borderless pills */
+.btn-secondary,
+.btn-primary {
+  border-radius: 999px;
+}
+
+.btn-secondary {
+  border: 1px solid transparent;
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-active);
+  border-color: transparent;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive: restate the inline breakpoints this file overrides      */
+/* ------------------------------------------------------------------ */
+@media (max-width: 1080px) and (min-width: 781px) {
+  .topbar,
+  .feed-scroll,
+  .composer-wrap,
+  .net-banner {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (max-width: 780px) {
+  .rail {
+    border-right: 0;
+    box-shadow: var(--shadow-drawer);
+  }
+
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .room-title {
+    font-size: 16px;
+  }
+
+  .net-banner {
+    padding: 8px 14px;
+  }
+
+  .feed-scroll {
+    padding: 8px 8px 18px;
+  }
+
+  .composer-wrap {
+    padding: 4px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .composer-box {
+    min-height: 50px;
+    padding: 6px 6px 6px 16px;
+    border-radius: 25px;
+  }
+}
+
+@media (max-width: 460px) {
+  .empty-title {
+    font-size: 24px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Accessibility                                                       */
+/* ------------------------------------------------------------------ */
+@media (prefers-contrast: more) {
+  html:root {
+    --border: #c8c8c8;
+    --border-strong: #8a8a8a;
+    --text-muted: #4a4a4a;
+    --rail-text-3: #4a4a4a;
+  }
+
+  html:root[data-theme="dark"] {
+    --border: #5a5a5a;
+    --border-strong: #8a8a8a;
+    --text-muted: #c4c4c4;
+    --rail-text-3: #c4c4c4;
+  }
+}
+
+@media (forced-colors: active) {
+  .composer-box,
+  .btn-secondary,
+  .add-agent-btn,
+  #appearanceBtn,
+  .rail-project-link[aria-current="page"],
+  .project-link[aria-current="page"] {
+    border: 1px solid CanvasText;
+  }
+
+  .send-btn,
+  .btn-primary,
+  .jump-bottom-btn {
+    border: 1px solid ButtonText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .send-btn:active:not(:disabled) {
+    transform: none;
+  }
+}

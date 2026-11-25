@@ -1,5 +1,6 @@
 import errno
 import os
+from contextlib import ExitStack
 import subprocess
 import sys
 import unittest
@@ -152,13 +153,38 @@ class WindowsTests(Folder):
             self.assertEqual(windows.find_executable(AntigravityProvider.hints), str(agy))
             self.assertIsNone(windows.find_executable(CodexProvider.hints))
 
+    def isolated_windows_folders(self):
+        """Point every Windows install folder at an empty temp folder, so a real copy on this machine
+        (e.g. %LOCALAPPDATA%\\OpenAI\\Codex) never leaks into the test."""
+        empty = self.home / "isolated"
+        empty.mkdir(exist_ok=True)
+        folders = {name: str(empty / name) for name in ("LOCALAPPDATA", "APPDATA", "ProgramFiles", "ProgramData")}
+        stack = ExitStack()
+        stack.enter_context(patch.dict(os.environ, folders))
+        stack.enter_context(patch("commonroom.platform.windows.Path.home", return_value=empty))
+        return stack
+
+    def test_newest_declared_copy_wins_over_an_older_leftover(self):
+        local_data = self.home / "AppData" / "Local"
+        stale = local_data / "OpenAI" / "Codex" / "bin" / "codex.exe"
+        current = local_data / "OpenAI" / "Codex" / "bin" / "f71a721e" / "codex.exe"
+        for binary, modified in ((stale, 1_000_000), (current, 2_000_000)):
+            binary.parent.mkdir(parents=True, exist_ok=True)
+            binary.touch()
+            os.utime(binary, (modified, modified))
+        windows = WindowsPlatform()
+        windows._store_locations["OpenAI.Codex"] = None
+        with self.isolated_windows_folders(), patch.dict(os.environ, {"LOCALAPPDATA": str(local_data)}), \
+                patch("commonroom.platform.windows.shutil.which", return_value=None):
+            self.assertEqual(windows.find_executable(CodexProvider.hints), str(current))
+
     def test_store_package_lookup_runs_once_and_hides_the_console(self):
         package = self.home / "OpenAI.Codex_1.0"
         codex = package / "app" / "resources" / "codex.exe"
         codex.parent.mkdir(parents=True)
         codex.touch()
         windows = WindowsPlatform()
-        with patch("commonroom.platform.windows.shutil.which", return_value=None), \
+        with self.isolated_windows_folders(), patch("commonroom.platform.windows.shutil.which", return_value=None), \
                 patch("commonroom.platform.windows.subprocess.run",
                       return_value=SimpleNamespace(returncode=0, stdout=f"{package}\r\n", stderr="")) as run:
             self.assertEqual(windows.find_executable(CodexProvider.hints), str(codex))
@@ -169,7 +195,7 @@ class WindowsTests(Folder):
 
     def test_store_lookup_failure_means_not_installed(self):
         windows = WindowsPlatform()
-        with patch("commonroom.platform.windows.shutil.which", return_value=None), \
+        with self.isolated_windows_folders(), patch("commonroom.platform.windows.shutil.which", return_value=None), \
                 patch("commonroom.platform.windows.subprocess.run", side_effect=OSError("no powershell")):
             self.assertIsNone(windows.find_executable(CodexProvider.hints))
 

@@ -64,6 +64,24 @@ def declared_file(template: str, usable, **folders: str) -> Path | None:
         return None
 
 
+def newest_declared_file(templates, usable, **folders: str) -> Path | None:
+    """The most recently updated file among a tool's ``paths`` hints. Tools that update themselves
+    (Codex, Claude Code) can leave an older copy behind in another declared folder, so the first
+    match is not necessarily the one in use; ties keep the declared order."""
+    best, best_time = None, None
+    for template in templates:
+        candidate = declared_file(template, usable, **folders)
+        if candidate is None:
+            continue
+        try:
+            modified = candidate.stat().st_mtime
+        except OSError:
+            continue
+        if best_time is None or modified > best_time:
+            best, best_time = candidate, modified
+    return best
+
+
 def env_file(hints: ExecutableHints, usable) -> Path | None:
     """The tool path a user set in one of the hint's environment variables, if it is usable."""
     import os

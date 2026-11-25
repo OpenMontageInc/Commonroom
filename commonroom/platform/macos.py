@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 from typing import BinaryIO
 
-from .base import DataFolderInUse, ExecutableHints, FolderPickerUnavailable, Platform, declared_file, env_file
+from .base import DataFolderInUse, ExecutableHints, FolderPickerUnavailable, Platform, newest_declared_file, env_file
 
 # A GUI-launched app inherits a minimal PATH; these are where CLI installers usually put tools
 # (official installers, Homebrew on Apple silicon and Intel, npm/volta/bun/pnpm global bins).
@@ -102,9 +102,8 @@ class MacPlatform(Platform):
         for command in hints.commands:
             if found := shutil.which(command, path=search):
                 return found
-        for template in hints.paths.get(self.name, ()):
-            if candidate := declared_file(template, usable, home=str(Path.home())):
-                return str(candidate)
+        if candidate := newest_declared_file(hints.paths.get(self.name, ()), usable, home=str(Path.home())):
+            return str(candidate)
         return None
 
     def kill_process_tree(self, process: subprocess.Popen) -> None:

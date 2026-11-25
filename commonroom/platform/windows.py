@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from typing import BinaryIO
 
-from .base import DataFolderInUse, ExecutableHints, FolderPickerUnavailable, Platform, declared_file, env_file, expand_hint
+from .base import DataFolderInUse, ExecutableHints, FolderPickerUnavailable, Platform, env_file, expand_hint, newest_declared_file
 
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
 
@@ -158,9 +158,8 @@ class WindowsPlatform(Platform):
             for name in (command + ".exe", command):
                 if found := shutil.which(name, path=path):
                     return found
-        for template in hints.paths.get(self.name, ()):
-            if candidate := declared_file(template, Path.is_file, **folders):
-                return str(candidate)
+        if candidate := newest_declared_file(hints.paths.get(self.name, ()), Path.is_file, **folders):
+            return str(candidate)
         for package, inner in hints.store_packages.get(self.name, ()):
             location = self._store_location(package)
             if location and (candidate := Path(location) / inner).is_file():

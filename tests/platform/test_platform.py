@@ -37,16 +37,17 @@ class Folder(unittest.TestCase):
 class MacTests(Folder):
     def test_application_support_and_gui_launch_paths(self):
         mac = MacPlatform()
-        with patch("commonroom.platform.macos.Path.home", return_value=self.home), patch.dict(os.environ, {"PATH": "/usr/bin"}), \
+        home = Path("/Users/tester")  # no drive letter, so a ":"-separated PATH splits cleanly on any OS
+        with patch("commonroom.platform.macos.Path.home", return_value=home), patch.dict(os.environ, {"PATH": "/usr/bin"}), \
                 patch.object(mac, "login_path", return_value=["/Users/x/.nvm/versions/node/v22/bin", "/usr/bin"]):
-            self.assertEqual(mac.data_dir(), self.home / "Library" / "Application Support" / "Commonroom")
+            self.assertEqual(mac.data_dir(), home / "Library" / "Application Support" / "Commonroom")
             path = mac.cli_environment()["PATH"]
-            parts = path.split(os.pathsep)
+            parts = path.split(":")
             # Inherited PATH first, then the login shell's, then the usual install folders, without repeats.
-            self.assertEqual(parts[:3], ["/usr/bin", "/Users/x/.nvm/versions/node/v22/bin", str(self.home / ".local" / "bin")])
+            self.assertEqual(parts[:3], ["/usr/bin", "/Users/x/.nvm/versions/node/v22/bin", str(home / ".local" / "bin")])
             self.assertEqual(parts[-2:], ["/opt/homebrew/bin", "/usr/local/bin"])
             self.assertEqual(len(parts), len(set(parts)))
-            self.assertIn(str(self.home / ".volta" / "bin"), parts)
+            self.assertIn(str(home / ".volta" / "bin"), parts)
             with patch("commonroom.platform.macos.shutil.which",
                        side_effect=lambda command, **_options: f"found/{command}") as which:
                 for provider, command in ((CodexProvider, "codex"), (ClaudeProvider, "claude"), (AntigravityProvider, "agy")):
@@ -233,7 +234,9 @@ class WindowsSearchPathTests(Folder):
         super().setUp()
         self.env = {"PATH": r"C:\Windows\system32", "LOCALAPPDATA": r"C:\Users\me\AppData\Local",
                     "APPDATA": r"C:\Users\me\AppData\Roaming", "ProgramFiles": r"C:\Program Files",
-                    "ProgramData": r"C:\ProgramData", "SCOOP": r"D:\scoop"}
+                    "ProgramData": r"C:\ProgramData", "SCOOP": r"D:\scoop",
+                    # Path.home() reads these on Windows and HOME elsewhere; clearing them breaks it.
+                    "USERPROFILE": str(self.home), "HOME": str(self.home)}
 
     def search(self, saved=()):
         windows = WindowsPlatform()

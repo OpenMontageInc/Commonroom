@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import errno
 import os
+import posixpath
 import shutil
 import signal
 import socket
@@ -22,6 +23,7 @@ HOME_PATHS = (".local/bin", ".npm-global/bin", ".volta/bin", ".bun/bin", "Librar
 
 _MARKER = "__COMMONROOM_PATH__"
 _LOGIN_PATH_TTL = 60  # seconds; a rescan also clears it
+_PATHSEP = ":"  # spelled out so tests can exercise this module on any OS
 
 
 def _login_shell() -> str:
@@ -32,7 +34,7 @@ def _login_shell() -> str:
             shell = pwd.getpwuid(os.getuid()).pw_shell
         except (ImportError, KeyError, OSError):
             shell = ""
-    return shell if shell and os.path.isabs(shell) and os.access(shell, os.X_OK) else "/bin/zsh"
+    return shell if shell and posixpath.isabs(shell) and os.access(shell, os.X_OK) else "/bin/zsh"
 
 # "activate" brings osascript's dialog to the front; without it the picker can open behind the browser.
 _PICK_FOLDER = ("on run argv", "activate", "POSIX path of (choose folder with prompt (item 1 of argv))", "end run")
@@ -70,7 +72,7 @@ class MacPlatform(Platform):
                                       errors="replace", timeout=8, start_new_session=True)
                 parts = (done.stdout or "").split(_MARKER)
                 if len(parts) >= 3:
-                    paths = [path for path in parts[-2].split(os.pathsep) if os.path.isabs(path)]
+                    paths = [path for path in parts[-2].split(_PATHSEP) if posixpath.isabs(path)]
             except (OSError, subprocess.SubprocessError):
                 pass
             self._login_path = (time.monotonic(), paths)
@@ -79,11 +81,11 @@ class MacPlatform(Platform):
     def cli_environment(self) -> dict[str, str]:
         environment = os.environ.copy()
         # The inherited PATH comes first so a terminal's own choices (an active venv, pyenv) still win.
-        paths = environment.get("PATH", os.defpath).split(os.pathsep)
+        paths = environment.get("PATH", os.defpath).split(_PATHSEP)
         paths.extend(self.login_path())
         paths.extend(str(Path.home() / path) for path in HOME_PATHS)
         paths.extend(EXTRA_PATHS)
-        environment["PATH"] = os.pathsep.join(dict.fromkeys(path for path in paths if path))
+        environment["PATH"] = _PATHSEP.join(dict.fromkeys(path for path in paths if path))
         return environment
 
     def popen_options(self) -> dict:

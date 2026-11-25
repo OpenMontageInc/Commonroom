@@ -27,6 +27,10 @@ jobs:
             python: "3.10"
           - os: windows-latest
             python: "3.13"
+          - os: macos-latest
+            python: "3.10"
+          - os: macos-latest
+            python: "3.13"
           - os: ubuntu-latest
             python: "3.13"
 
@@ -46,8 +50,12 @@ jobs:
         run: python -m pytest tests -q
 
   desktop:
-    name: Desktop
-    runs-on: windows-latest
+    name: Desktop app
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
 
     steps:
       - name: Checkout repository
@@ -75,3 +83,21 @@ jobs:
           for file in *.cjs platform/*.cjs; do
             node --check "$file"
           done
+
+      - name: Check macOS launcher parses and is executable
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          bash -n "Start Commonroom.command"
+          test -x "Start Commonroom.command"
+
+  # The branch ruleset requires a check named "Desktop"; the matrix above reports per-OS names,
+  # so this job reports the combined result under that name.
+  desktop-result:
+    name: Desktop
+    if: always()
+    needs: desktop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every desktop job to pass
+        run: test "${{ needs.desktop.result }}" = "success"

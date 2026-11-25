@@ -44,7 +44,7 @@ const profile = testUrl
   ? path.join(app.getPath('temp'), `commonroom-desktop-qa-${testUrl.hostname.replaceAll(':', '_')}-${testUrl.port || 80}`)
   : portOverride || dataOverride
     ? path.join(app.getPath('temp'), `commonroom-desktop-port-${servicePort}`)
-    : path.join(app.getPath('appData'), 'Commonroom');
+    : path.join(app.getPath('appData'), platform?.profileFolder || 'Commonroom');
 fs.mkdirSync(profile, { recursive: true });
 app.setPath('userData', profile);
 app.setName('Commonroom');
@@ -247,7 +247,8 @@ async function requirePython() {
 async function startService(directory) {
   const python = await requirePython();
   if (await healthy()) return;
-  app.setAppLogsPath();
+  // Unpackaged, Electron's default macOS log folder is ~/Library/Logs/Electron, shared by every dev app.
+  app.setAppLogsPath(app.isPackaged ? undefined : path.join(profile, 'logs'));
   fs.mkdirSync(app.getPath('logs'), { recursive: true });
   const logPath = path.join(app.getPath('logs'), 'backend.log');
   const log = fs.openSync(logPath, 'a');

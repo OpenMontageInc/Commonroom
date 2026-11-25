@@ -122,6 +122,8 @@ module.exports = {
   spawnOptions(): object,                           // windowsHide / detached etc.
   stopServiceOnPort(port): Promise<{stopped, reason?}>, // ends an older Commonroom service on the port;
                                                     // only a Python process running server.py/commonroom
+  profileFolder?: string,                           // Electron profile under appData (default 'Commonroom';
+                                                    // macOS uses 'Commonroom Desktop' to stay apart from the data folder)
 };
 ```
 

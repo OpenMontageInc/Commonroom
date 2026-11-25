@@ -7,16 +7,17 @@ const { isCommonroomService, notCommonroom } = require('./service-process.cjs');
 
 const MINIMUM = [3, 10];
 // Newest first: a bare python3 is often Apple's older Command Line Tools Python.
-const CANDIDATES = ['python3.13', 'python3.12', 'python3.11', 'python3.10', 'python3'];
+const CANDIDATES = ['python3.15', 'python3.14', 'python3.13', 'python3.12', 'python3.11', 'python3.10', 'python3'];
 const PROBE = 'import sys;print(sys.version_info[:2]);print(sys.executable)';
 
-// Apps opened from Finder get a minimal PATH, so add the usual install locations.
+// Apps opened from Finder get a minimal PATH, so add the usual install locations. They go after the
+// inherited PATH, so a shell's own choices (pyenv, nvm, a venv) still win for the service and agents.
 function environment() {
   const home = os.homedir();
   const paths = [
+    ...(process.env.PATH || '/usr/bin:/bin:/usr/sbin:/sbin').split(path.delimiter),
     path.join(home, '.local', 'bin'), path.join(home, '.npm-global', 'bin'),
     path.join(home, '.volta', 'bin'), '/opt/homebrew/bin', '/usr/local/bin',
-    ...(process.env.PATH || '/usr/bin:/bin:/usr/sbin:/sbin').split(path.delimiter),
   ];
   return { ...process.env, PATH: [...new Set(paths.filter(Boolean))].join(path.delimiter) };
 }
@@ -42,6 +43,10 @@ async function probe(command) {
 
 module.exports = {
   name: 'macos',
+
+  // The shell's own Electron profile folder. On macOS appData is ~/Library/Application Support, which
+  // also holds the service's data folder "Commonroom", so the shell keeps its files apart.
+  profileFolder: 'Commonroom Desktop',
 
   // The first candidate that runs and is Python 3.10 or newer.
   async findPython() {

@@ -41,8 +41,12 @@ class AntigravityProvider(Provider):
     id = "antigravity"
     label = "Antigravity"
     install_url = "https://antigravity.google"
+    # The standalone Antigravity CLI. Its official installers use these folders; Homebrew
+    # (antigravity-cli cask), winget (Google.AntigravityCLI) and Chocolatey are found through the search path.
+    # The Antigravity IDE's own "antigravity" launcher only opens the IDE and has no ACP server.
     hints = ExecutableHints(commands=("agy",), paths={"windows": ("{localappdata}/agy/bin/agy.exe",
-                                                                  "{localappdata}/Programs/agy/bin/agy.exe")})
+                                                                  "{localappdata}/Programs/agy/bin/agy.exe"),
+                                                      "macos": ("{home}/.local/bin/agy",)})
 
     def list_models(self, workspace: Path, cancel: threading.Event) -> list[Model]:
         with RpcProcess(self.platform, [self.executable(), "acp", "--stdio"], workspace, cancel) as rpc:

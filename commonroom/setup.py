@@ -39,6 +39,7 @@ class MachineScan:
 
     def rescan(self) -> dict:
         with self._lock:
+            self.platform.refresh()  # pick up tools installed since the last scan
             self._result = self._scan()
             return copy.deepcopy(self._result)
 

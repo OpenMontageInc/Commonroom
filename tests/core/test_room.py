@@ -73,7 +73,7 @@ class RoomTestCase(unittest.TestCase):
 
 class RoomIntegrationTests(RoomTestCase):
     def test_project_room_restarts_a_session_saved_in_another_folder(self):
-        storage = Path(self.folder.name)
+        storage = Path(self.folder.name).resolve()
         project = storage / "Selected project"
         project.mkdir()
         instructions = project / "AGENTS.md"
@@ -121,7 +121,7 @@ class RoomIntegrationTests(RoomTestCase):
 
     def test_projects_keep_room_context_and_native_sessions_separate(self):
         self.close_room()
-        root = Path(self.folder.name)
+        root = Path(self.folder.name).resolve()
         first, second = root / "Project A", root / "Project B"
         for project, marker in [(first, "FIRST_PROJECT_ONLY"), (second, "SECOND_PROJECT_ONLY")]:
             project.mkdir()
@@ -623,7 +623,7 @@ class LeadSeedingAndMigrationTests(unittest.TestCase):
     def setUp(self):
         folder = TemporaryDirectory()
         self.addCleanup(folder.cleanup)
-        self.root = Path(folder.name)
+        self.root = Path(folder.name).resolve()
         self.harness = FakeHarness()
         self.providers = FakeProviders(self.harness)
 

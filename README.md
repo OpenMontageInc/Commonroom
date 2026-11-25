@@ -20,7 +20,7 @@ ChatGPT or Google plans you already pay for through their official tools, so
 there are no keys to paste and no per-token bills.
 
 <!-- 30-second walkthrough. GitHub plays a bare user-attachments link as an inline video. -->
-VIDEO_URL_PLACEHOLDER
+https://github.com/user-attachments/assets/e6859ecf-2b87-445e-9863-e0642bafb9af
 
 ## What it does
 

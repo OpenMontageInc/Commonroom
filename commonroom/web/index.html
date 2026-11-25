@@ -2545,6 +2545,13 @@
       const desktopBridge = window.commonroomDesktop || null;
       const railProjectBtn = document.getElementById("railProjectBtn");
       const railProjectBtnText = document.getElementById("railProjectBtnText");
+      // Name the shortcut the way this OS does (the keydown handler accepts both Ctrl and ⌘).
+      if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+        railProjectBtn.title = "Add project (⌘O)";
+        for (const button of [railProjectBtn, document.getElementById("openProjectFormBtn")]) {
+          button?.setAttribute("aria-keyshortcuts", "Meta+O");
+        }
+      }
       const railProjectList = document.getElementById("railProjectList");
       const railProjectCount = document.getElementById("railProjectCount");
       const headerProjectBtn = document.getElementById("headerProjectBtn");

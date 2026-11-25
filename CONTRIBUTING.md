@@ -24,7 +24,12 @@ npm ci
 npm start
 ```
 
-On macOS use `python3` instead of `py -3` and any temporary folder for `--data`.
+On macOS use a Python 3.10+ interpreter (for example `python3.12`; the system
+`python3` is 3.9) instead of `py -3`, and any temporary folder for `--data`:
+
+```bash
+python3.12 -m commonroom --port 8741 --data "$TMPDIR/commonroom-dev"
+```
 
 To point the desktop app at a throwaway service too, set `COMMONROOM_PORT` and
 `COMMONROOM_DATA` before `npm start` (see "Desktop shell" in
@@ -57,7 +62,11 @@ py -3 -m pytest tests -q          # Python (pip install pytest first)
 cd desktop; npm test              # desktop shell
 ```
 
-CI runs the Python suite on Windows and Linux and the desktop tests on Windows.
+On macOS, `python3.12 -m pytest tests -q` (in a virtual environment if Homebrew's
+Python refuses a global `pip install`).
+
+CI runs the Python suite on Windows, macOS and Linux and the desktop tests on
+Windows and macOS.
 Both must pass before a PR can merge.
 
 ### Testing rules

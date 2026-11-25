@@ -5,7 +5,7 @@
 <p>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
   <a href="https://github.com/OpenMontageInc/Commonroom/actions/workflows/ci.yml"><img src="https://github.com/OpenMontageInc/Commonroom/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/platform-Windows-0078D6.svg" alt="Platform: Windows">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS-0078D6.svg" alt="Platform: Windows | macOS">
   <a href="https://github.com/OpenMontageInc/Commonroom/stargazers"><img src="https://img.shields.io/github/stars/OpenMontageInc/Commonroom?style=social" alt="GitHub stars"></a>
 </p>
 
@@ -53,9 +53,44 @@ there are no keys to paste and no per-token bills.
    asks you to pick a lead agent. If Python 3.10+ is missing it shows the one
    command to install it.
 
-macOS support is planned.
+## Install (macOS, from source)
 
-## Run from source
+A signed macOS app is on the way. Until then, run Commonroom from source:
+
+1. Install at least one agent tool and sign in to it (see above). Codex that
+   comes with the ChatGPT desktop app is found automatically.
+2. Install Python 3.10 or newer. The `python3` that ships with macOS is 3.9, so
+   use [Homebrew](https://brew.sh) or [python.org](https://www.python.org/downloads/macos/):
+
+   ```bash
+   brew install python@3.12
+   ```
+
+3. Get Commonroom and start it:
+
+   ```bash
+   git clone https://github.com/OpenMontageInc/Commonroom.git
+   cd Commonroom
+   python3.12 -m commonroom
+   ```
+
+   Then open http://127.0.0.1:8731. You can also double-click
+   **Start Commonroom.command** in Finder, which finds a suitable Python and
+   opens the browser for you.
+
+4. Optional, the desktop app (needs Node.js 20+, e.g. `brew install node`):
+
+   ```bash
+   cd desktop
+   npm ci
+   npm start
+   ```
+
+   Once installed, **Start Commonroom.command** opens the desktop app instead.
+
+Your rooms are stored in `~/Library/Application Support/Commonroom`.
+
+## Run from source (Windows)
 
 Requires Python 3.10+ and Node.js 20+.
 
@@ -65,7 +100,8 @@ py -3 -m commonroom          # service + web UI at http://127.0.0.1:8731
 cd desktop; npm ci; npm start   # optional: the desktop app
 ```
 
-Build the Windows installer with `npm run package:win` from `desktop/`.
+Or double-click **Start Commonroom.cmd**. Build the Windows installer with
+`npm run package:win` from `desktop/`.
 
 ## ⚠️ Agents run with full autonomy
 

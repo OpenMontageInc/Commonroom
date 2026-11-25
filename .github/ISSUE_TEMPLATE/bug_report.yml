@@ -69,8 +69,9 @@ body:
     attributes:
       label: backend.log excerpt
       description: |
-        The relevant lines from the desktop app's `backend.log` (Windows: `%APPDATA%\Commonroom\logs\backend.log`).
-        Running from source? Paste the console output of `py -3 -m commonroom` instead.
+        The relevant lines from the desktop app's `backend.log` (Windows: `%APPDATA%\Commonroom\logs\backend.log`;
+        macOS: `~/Library/Logs/Commonroom/backend.log`, or `~/Library/Application Support/Commonroom Desktop/logs/backend.log` when the desktop app runs from source).
+        Running only the service from source? Paste the console output of `python -m commonroom` instead.
         **Remove anything private first**: project paths, file contents, prompts, account names or tokens.
       render: shell
     validations:

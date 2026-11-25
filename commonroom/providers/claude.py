@@ -41,8 +41,15 @@ class ClaudeProvider(Provider):
     id = "claude"
     label = "Claude Code"
     install_url = "https://docs.claude.com/en/docs/claude-code/setup"
-    hints = ExecutableHints(commands=("claude",), paths={"windows": ("{home}/.local/bin/claude.exe",),
-                                                         "macos": ("{home}/.local/bin/claude",)})
+    # Native installer: ~/.local/bin. Older npm "local" installs: ~/.claude/local. npm, Homebrew, winget, Scoop
+    # and version managers are found through the platform's search path. The Claude desktop app's private
+    # copy is deliberately not used: its path changes with every app update.
+    hints = ExecutableHints(
+        commands=("claude",),
+        paths={"windows": ("{home}/.local/bin/claude.exe", "{home}/.claude/local/claude.cmd"),
+               "macos": ("{home}/.local/bin/claude", "{home}/.claude/local/claude")},
+        # Older Claude desktop apps register a "Claude.exe" app alias here that opens the app, not the CLI.
+        exclude={"windows": ("{localappdata}/Microsoft/WindowsApps",)})
 
     def list_models(self, workspace: Path, cancel: threading.Event) -> list[Model]:
         args = [self.executable(), "-p", "--verbose", "--input-format", "stream-json", "--output-format", "stream-json"]

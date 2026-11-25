@@ -21,7 +21,8 @@ class ExecutableHints:
 
     ``commands`` are looked up on PATH. ``paths`` maps a platform name
     ("windows", "macos", ...) to extra candidate files; each entry may use the
-    placeholders ``{home}`` and ``{localappdata}``. ``store_packages`` maps a
+    placeholders ``{home}``, ``{localappdata}``, ``{appdata}``, ``{programfiles}`` and ``{programdata}``
+    (Windows folders are empty elsewhere; an entry using an empty one is skipped). ``store_packages`` maps a
     platform name to (package name, path inside the package) pairs for tools
     installed through an OS app store (for example the Windows Codex app).
     """
@@ -29,6 +30,48 @@ class ExecutableHints:
     commands: tuple[str, ...]
     paths: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
     store_packages: Mapping[str, tuple[tuple[str, str], ...]] = field(default_factory=dict)
+    #: Per platform, folders (same placeholders as ``paths``) whose match for ``commands`` is never the
+    #: tool, e.g. the Windows app alias folder where an old Claude desktop app registered "Claude.exe".
+    exclude: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
+    #: Environment variables a user may set to the tool's full path; checked before anything else.
+    env: tuple[str, ...] = ()
+
+
+def expand_hint(template: str, **folders: str) -> Path | None:
+    """Fill a hint's placeholders; None when it uses a folder this OS does not have (empty or missing)."""
+    values = {"home": str(Path.home()), "localappdata": "", "appdata": "", "programfiles": "",
+              "programdata": "", **folders}
+    if any(f"{{{name}}}" in template and not value for name, value in values.items()):
+        return None
+    return Path(template.format(**values))
+
+
+def declared_file(template: str, usable, **folders: str) -> Path | None:
+    """The file a ``paths`` hint names, or None. A ``*`` in the hint picks the newest usable match,
+    for tools that keep each version in its own folder (e.g. ``bin/<hash>/codex.exe``)."""
+    path = expand_hint(template, **folders)
+    if path is None:
+        return None
+    if "*" not in str(path):
+        return path if usable(path) else None
+    parts = path.parts
+    first = next(index for index, part in enumerate(parts) if "*" in part)
+    anchor = Path(*parts[:first])
+    try:
+        matches = [match for match in anchor.glob(str(Path(*parts[first:]))) if usable(match)]
+        return max(matches, key=lambda match: match.stat().st_mtime, default=None)
+    except OSError:
+        return None
+
+
+def env_file(hints: ExecutableHints, usable) -> Path | None:
+    """The tool path a user set in one of the hint's environment variables, if it is usable."""
+    import os
+    for name in hints.env:
+        value = os.environ.get(name, "").strip().strip('"')
+        if value and usable(Path(value)):
+            return Path(value)
+    return None
 
 
 class DataFolderInUse(RuntimeError):
@@ -56,6 +99,9 @@ class Platform(ABC):
     def cli_environment(self) -> dict[str, str] | None:
         """Environment for child processes, or None to inherit unchanged."""
         return None
+
+    def refresh(self) -> None:
+        """Forget cached lookups (PATH from the shell or registry) before a new machine scan."""
 
     def popen_options(self) -> dict:
         """Extra keyword arguments for subprocess.Popen/run (e.g. hide console windows)."""

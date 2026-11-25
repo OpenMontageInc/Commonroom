@@ -53,12 +53,25 @@ Declared as data, resolved by the platform:
 
 ```python
 hints = ExecutableHints(
-    commands=("copilot",),                                        # looked up on PATH (".exe" first on Windows)
-    paths={"windows": ("{localappdata}/Programs/copilot/copilot.exe",),  # fallbacks; {home} and {localappdata}
+    commands=("copilot",),                                        # looked up on the search path (".exe" first on Windows)
+    env=("COPILOT_CLI_PATH",),                                    # a full path the user set; checked first
+    paths={"windows": ("{localappdata}/Programs/copilot/copilot.exe",),  # fallbacks after the search path
            "macos": ("{home}/.local/bin/copilot",)},
+    exclude={"windows": ("{localappdata}/Microsoft/WindowsApps",)},  # folders whose match is not the tool
 )
 ```
 
+The search path is more than the service's own PATH, because an app opened from Finder,
+the Dock or the Start menu gets a minimal one. On macOS it adds the user's login-shell PATH
+(nvm, fnm, asdf, mise, Homebrew) and the usual install folders; on Windows the PATH saved in
+the registry (so tools installed after Commonroom started are found) and the npm, winget,
+Scoop, Chocolatey, Volta, nvm-windows, pnpm and bun folders. So a tool installed through a
+package manager usually needs only `commands`; use `paths` for installers that do not touch
+PATH or for apps that bundle the tool.
+
+`paths` placeholders: `{home}`, `{localappdata}`, `{appdata}`, `{programfiles}`,
+`{programdata}` (a hint using a folder the OS lacks is skipped). A `*` matches one folder
+level and picks the newest match, for tools that keep versions in hashed folders.
 `store_packages` covers tools installed from an OS app store (see `codex.py`).
 
 ### `TurnRequest` (what to run, as data)

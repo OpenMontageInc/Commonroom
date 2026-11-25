@@ -7,6 +7,7 @@ import queue
 import subprocess
 import threading
 import time
+import weakref
 
 from ..platform.base import Platform
 from .base import SessionLost
@@ -30,6 +31,20 @@ class RpcError(RuntimeError):
         self.code = error.get("code")
         self.data = error.get("data")
         super().__init__(f"{method}: {error.get('message', error)}")
+
+
+_live: "weakref.WeakSet[RpcProcess]" = weakref.WeakSet()
+_live_lock = threading.Lock()
+
+
+def end_all_processes() -> None:
+    """Kill every harness still running, so stopping the service never leaves agents working unattended."""
+    with _live_lock:
+        running = list(_live)
+    for rpc in running:
+        proc = getattr(rpc, "proc", None)
+        if proc is not None and proc.poll() is None:
+            rpc.platform.kill_process_tree(proc)
 
 
 class RpcProcess:
@@ -65,6 +80,8 @@ class RpcProcess:
         self.readers = [threading.Thread(target=fn, daemon=True) for fn in (reader, errors)]
         for thread in self.readers:
             thread.start()
+        with _live_lock:
+            _live.add(self)
         return self
 
     def __exit__(self, exc_type, exc, tb):
@@ -77,10 +94,15 @@ class RpcProcess:
         except subprocess.TimeoutExpired:
             self.platform.kill_process_tree(self.proc)
             self.proc.wait()
-        for thread in self.readers:
+        with _live_lock:
+            _live.discard(self)
+        # A process the harness started can outlive it while still holding these pipes (for example a
+        # dev server). Closing a pipe whose reader is still blocked on it would wait until that process
+        # exits, so such a pipe is left to its daemon reader, which ends when the pipe does.
+        for thread, pipe in zip(self.readers, (self.proc.stdout, self.proc.stderr)):
             thread.join(timeout=1)
-        self.proc.stdout.close()
-        self.proc.stderr.close()
+            if not thread.is_alive():
+                pipe.close()
 
     def wait_for(self, predicate, timeout=2):
         """Drain protocol events during shutdown until the harness acknowledges."""

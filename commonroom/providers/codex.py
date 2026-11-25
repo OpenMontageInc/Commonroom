@@ -180,7 +180,19 @@ class CodexProvider(Provider):
     id = "codex"
     label = "Codex"
     install_url = "https://developers.openai.com/codex/cli"
+    # Besides PATH (npm, Homebrew cask, winget, Scoop, version managers): the official installers'
+    # folders, and the ChatGPT desktop app (formerly the Codex app), which bundles the CLI without putting
+    # it on PATH. On Windows the Store app's own codex.exe cannot be run by other programs ("Access is
+    # denied"), so the per-user copy it makes in %LOCALAPPDATA%\OpenAI\Codex\bin comes first.
     hints = ExecutableHints(commands=("codex",),
+                            env=("CODEX_CLI_PATH",),
+                            paths={"macos": ("{home}/.codex/packages/standalone/current/bin/codex",
+                                             "/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex",
+                                             "{home}/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex"),
+                                   "windows": ("{localappdata}/Programs/OpenAI/Codex/bin/codex.exe",
+                                               "{home}/.codex/packages/standalone/current/bin/codex.exe",
+                                               "{localappdata}/OpenAI/Codex/bin/codex.exe",
+                                               "{localappdata}/OpenAI/Codex/bin/*/codex.exe")},
                             store_packages={"windows": (("OpenAI.Codex", "app/resources/codex.exe"),)})
 
     def list_models(self, workspace: Path, cancel: threading.Event) -> list[Model]:

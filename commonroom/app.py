@@ -3,6 +3,7 @@ import sys
 import threading
 from contextlib import contextmanager
 from pathlib import Path
+from urllib.parse import quote
 
 from . import __version__
 from .core.projects import ProjectRooms
@@ -32,13 +33,30 @@ class App:
     def setup(self):
         """The machine scan (platform, Python, providers) plus the user's settings."""
         scan, settings = self.scan.result(), self.settings.get()
+        logos = {provider.id: self._logo_url(provider) for provider in self.registry}
         return {"platform": scan.get("platform") or self.platform.describe(),
                 "python": scan.get("python") or {"version": sys.version.split()[0]},
-                "providers": scan["providers"], "settings": settings, "setupComplete": settings["setupComplete"]}
+                "providers": [dict(item, logo=logos.get(item["id"])) for item in scan["providers"]],
+                "settings": settings, "setupComplete": settings["setupComplete"]}
 
     def providers(self):
         installed = set(self.scan.installed_ids())
-        return {"providers": [{"id": p.id, "label": p.label, "installed": p.id in installed} for p in self.registry]}
+        return {"providers": [{"id": p.id, "label": p.label, "installed": p.id in installed, "logo": self._logo_url(p)}
+                              for p in self.registry]}
+
+    @staticmethod
+    def _logo_url(provider):
+        """Where the UI loads a provider's logo, or None when it has none (the UI then draws an initial)."""
+        return f"/api/providers/{quote(provider.id, safe='')}/logo.svg" if provider.logo_file() else None
+
+    def provider_logo(self, provider_id):
+        """The SVG bytes of a registered provider's own logo, or None. Never reads any other file."""
+        try:
+            provider = self.registry.get(provider_id)
+        except ValueError:
+            return None
+        path = provider.logo_file()
+        return path.read_bytes() if path else None
 
     def update_settings(self, partial):
         return self.settings.update(partial, self.registry.ids())

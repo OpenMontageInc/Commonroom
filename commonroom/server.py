@@ -4,7 +4,7 @@ import sqlite3
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from .core.projects import ProjectNotFound, ProjectUnavailable
 from .platform.base import FolderPickerUnavailable
@@ -14,6 +14,7 @@ STATIC = {"/": ("index.html", "text/html"), "/appearance.css": ("appearance.css"
           "/fonts/dm-sans.woff2": ("fonts/dm-sans.woff2", "font/woff2"),
           "/fonts/newsreader.woff2": ("fonts/newsreader.woff2", "font/woff2")}
 PICKER_PROMPT = "Choose a project folder for Commonroom"
+LOGO_PREFIX, LOGO_SUFFIX = "/api/providers/", "/logo.svg"
 
 
 class UnsupportedContentType(ValueError):
@@ -25,12 +26,15 @@ class Handler(BaseHTTPRequestHandler):
     def app(self):
         return self.server.app
 
-    def reply(self, status, data, mime="application/json"):
+    def reply(self, status, data, mime="application/json", cache="no-store"):
         body = json.dumps(data, ensure_ascii=False).encode() if mime == "application/json" else data
         self.send_response(status)
         self.send_header("Content-Type", mime + ("; charset=utf-8" if mime != "font/woff2" else ""))
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache)
+        if mime == "image/svg+xml":
+            # An SVG opened on its own is a document: let it draw, never run scripts or load anything.
+            self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
         self.end_headers()
@@ -76,6 +80,12 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(200, self.app.settings.get())
         if path == "/api/providers":
             return self.reply(200, self.app.providers())
+        if path.startswith(LOGO_PREFIX) and path.endswith(LOGO_SUFFIX):
+            # Only a logo a registered provider declares is served; the id never becomes a path.
+            logo = self.app.provider_logo(unquote(path[len(LOGO_PREFIX):-len(LOGO_SUFFIX)]))
+            if logo is None:
+                return self.reply(404, {"error": "Unknown address."})
+            return self.reply(200, logo, "image/svg+xml", cache="private, max-age=3600")
         if path == "/api/projects":
             return self.reply(200, self.app.projects.snapshot())
         if path == "/api/models":

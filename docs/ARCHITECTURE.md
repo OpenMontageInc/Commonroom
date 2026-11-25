@@ -27,6 +27,7 @@ commonroom/providers/     One module per agent harness behind providers/base.py
    catalog.py               ModelCatalog (discovers models via providers, async, retryable)
    rpc.py                   JSON-lines child-process transport shared by providers
    codex.py claude.py antigravity.py
+   logos/                   each provider's SVG mark (Provider.logo); licences in NOTICE
 commonroom/platform/      One module per OS behind platform/base.py
    base.py                  Platform, ExecutableHints
    windows.py macos.py      OS specifics (data folder, PATH search, process kill, locks, folder picker)
@@ -97,13 +98,15 @@ Existing routes keep their shapes unless listed here. Room routes work both as
 | POST | `/api/setup/rescan` | re-detects providers, restarts model discovery for installed ones; returns same as GET `/api/setup` |
 | GET | `/api/settings` | `Settings` |
 | PUT | `/api/settings` | partial `{displayName?, lead?, setupComplete?}` → full `Settings`. `lead.provider` must be a registered id. |
-| GET | `/api/providers` | `{providers:[{id,label,installed}]}` (registry order) |
+| GET | `/api/providers` | `{providers:[{id,label,installed,logo}]}` (registry order). `logo` is `/api/providers/<id>/logo.svg` or `null` (the UI then draws the provider's initial). |
+| GET | `/api/providers/<id>/logo.svg` | The SVG a registered provider declares in `Provider.logo` (`image/svg+xml`, cached for an hour, `Content-Security-Policy: default-src 'none'`). 404 for an unknown provider or one without a logo; only plain `.svg` file names inside `providers/logos/` are read. |
 | GET | `/api/models` | `{models:{<provider>:[Model]}, errors:{}, loading:[], defaults:{<provider>:{model,effort}}}` — `defaults` now comes from `settings.lead` only (no external files). A provider is listed in `loading` until its first discovery finishes (all providers while the first machine scan runs; providers that are not installed never). |
 | POST | `/api/members` | `{name, provider, model, effort, role}`; provider validated against the registry |
 | PATCH | `/api/members/<id>` | any of `{name, model, effort, role}`. Changing model/effort keeps the session. |
 | GET | `/api/state` | as today, plus `human:{id:"human", name:<displayName>}`; each member gains `lead:bool` |
 
-`Detection` = `{id,label,installed,installUrl,path,version,error}`.
+`Detection` = `{id,label,installed,installUrl,path,version,error}`; in `/api/setup` each entry also
+carries `logo` (as in `/api/providers`).
 
 Member dict in state: `{id,name,provider,model,effort,role,lead,aliases}` (the old
 `permanent` field is dropped from the API; the lead member can be removed).
@@ -143,7 +146,8 @@ ships the `commonroom/` package as an extra resource.
 ## Adding a provider (e.g. GitHub Copilot CLI)
 
 1. Create `commonroom/providers/copilot.py` with `class CopilotProvider(Provider)`.
-2. Declare `id = "copilot"`, `label`, `install_url`, `hints = ExecutableHints(commands=("copilot",))`.
+2. Declare `id = "copilot"`, `label`, `install_url`, `hints = ExecutableHints(commands=("copilot",))`,
+   and optionally `logo = "copilot.svg"` with the file in `providers/logos/` (see ADDING_A_PROVIDER.md).
 3. Implement `run_turn` (map its streaming protocol onto `TurnContext`) and `list_models`.
 4. Add it to `BUILTIN_PROVIDERS` in `registry.py`. Add tests in `tests/providers/`.
 

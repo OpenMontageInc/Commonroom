@@ -3,3 +3,9 @@ Copyright 2026 Commonroom contributors
 
 This product includes the DM Sans and Newsreader fonts, licensed under the
 SIL Open Font License 1.1 (see commonroom/web/fonts/).
+
+The provider logos in commonroom/providers/logos/ come from the theSVG project
+(https://thesvg.org): claude.svg (Claude, CC0 1.0), openai.svg (OpenAI, MIT;
+fill set to currentColor so it follows the app theme) and antigravity.svg
+(Google Antigravity, MIT). These trademarks belong to their owners; Commonroom
+uses them only to identify the compatible tools.

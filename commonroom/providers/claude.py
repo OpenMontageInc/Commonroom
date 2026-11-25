@@ -40,6 +40,7 @@ def control(request, ask):
 class ClaudeProvider(Provider):
     id = "claude"
     label = "Claude Code"
+    logo = "claude.svg"
     install_url = "https://docs.claude.com/en/docs/claude-code/setup"
     # Native installer: ~/.local/bin. Older npm "local" installs: ~/.claude/local. npm, Homebrew, winget, Scoop
     # and version managers are found through the platform's search path. The Claude desktop app's private

@@ -58,6 +58,16 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Choose an available provider."):
             registry.get("copilot")
 
+    def test_builtin_providers_ship_their_logo_and_a_new_provider_needs_none(self):
+        for provider in build_registry(FakePlatform()):
+            path = provider.logo_file()
+            self.assertIsNotNone(path, provider.id)
+            self.assertTrue(path.read_bytes().lstrip().startswith(b"<svg"), provider.id)
+            self.assertNotIn(b"<script", path.read_bytes().lower(), provider.id)
+        # A provider without a logo is still valid: the UI draws its initial instead.
+        self.assertIsNone(CopilotProvider.logo)
+        self.assertIsNone(CopilotProvider(FakePlatform()).logo_file())
+
     def test_duplicate_ids_are_rejected(self):
         with self.assertRaises(ValueError):
             ProviderRegistry([CopilotProvider(FakePlatform()), CopilotProvider(FakePlatform())])

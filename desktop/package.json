@@ -1,7 +1,7 @@
 {
   "name": "commonroom",
   "productName": "Commonroom",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "A common workspace for you and your agents across any provider",
   "license": "Apache-2.0",

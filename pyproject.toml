@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "commonroom"
-version = "0.1.0"
+version = "0.1.1"
 description = "A common workspace for you and your agents across any provider."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -18,7 +18,7 @@ commonroom = "commonroom.__main__:main"
 include = ["commonroom*"]
 
 [tool.setuptools.package-data]
-commonroom = ["web/*", "web/**/*"]
+commonroom = ["web/*", "web/**/*", "providers/logos/*.svg"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -179,6 +179,7 @@ def _handle_request(method, params, ask, file_changes):
 class CodexProvider(Provider):
     id = "codex"
     label = "Codex"
+    logo = "openai.svg"
     install_url = "https://developers.openai.com/codex/cli"
     # Besides PATH (npm, Homebrew cask, winget, Scoop, version managers): the official installers'
     # folders, and the ChatGPT desktop app (formerly the Codex app), which bundles the CLI without putting

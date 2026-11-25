@@ -40,6 +40,7 @@ def _acp_choices(option):
 class AntigravityProvider(Provider):
     id = "antigravity"
     label = "Antigravity"
+    logo = "antigravity.svg"
     install_url = "https://antigravity.google"
     # The standalone Antigravity CLI. Its official installers use these folders; Homebrew
     # (antigravity-cli cask), winget (Google.AntigravityCLI) and Chocolatey are found through the search path.

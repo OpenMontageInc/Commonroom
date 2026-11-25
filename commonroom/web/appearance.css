@@ -974,6 +974,41 @@ dialog.modal::backdrop {
   color: var(--text-muted);
 }
 
+.provider-picker-button {
+  border-radius: 10px;
+  border-color: var(--border-strong);
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.provider-picker-button:hover:not(:disabled) {
+  border-color: var(--border-hover);
+}
+
+.provider-picker-button:focus-visible,
+.provider-picker.is-open .provider-picker-button {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.provider-picker-button:disabled {
+  background-color: var(--bg-surface-2);
+}
+
+.provider-picker-list {
+  border-color: var(--border);
+  border-radius: 12px;
+  background: var(--bg-popover);
+}
+
+.provider-picker-option {
+  border-radius: 8px;
+}
+
+.provider-picker-option.is-active {
+  background: var(--bg-active);
+}
+
 .field-preview {
   border-radius: 14px;
   background: var(--bg-surface-2);

@@ -6,8 +6,9 @@ which provider it is talking to: it builds a ``TurnRequest`` plus ``TurnContext`
 and gets a ``TurnResult`` back.
 
 To add a provider: subclass ``Provider``, implement ``run_turn`` and
-``list_models``, declare ``id``/``label``/``hints``/``install_url``, and add it
-to ``commonroom.providers.registry.BUILTIN_PROVIDERS``. Nothing else changes.
+``list_models``, declare ``id``/``label``/``hints``/``install_url`` (and optionally
+``logo``), and add it to ``commonroom.providers.registry.BUILTIN_PROVIDERS``.
+Nothing else changes.
 """
 from __future__ import annotations
 
@@ -19,6 +20,9 @@ from pathlib import Path
 from typing import Callable, ClassVar, Optional
 
 from ..platform.base import ExecutableHints, Platform
+
+#: Folder holding the providers' logo files (see ``Provider.logo``).
+LOGOS = Path(__file__).resolve().parent / "logos"
 
 
 class ProviderNotInstalled(RuntimeError):
@@ -108,6 +112,10 @@ class Provider(ABC):
     install_url: ClassVar[str]
     #: Arguments that print a version string, or None when the tool has none.
     version_args: ClassVar[Optional[tuple[str, ...]]] = ("--version",)
+    #: File name of the provider's logo, an SVG in ``providers/logos/``. None (or a missing
+    #: file) makes the UI draw a neutral initial instead. Use ``fill="currentColor"`` for a
+    #: one-colour mark so it follows the light/dark theme.
+    logo: ClassVar[Optional[str]] = None
 
     def __init__(self, platform: Platform):
         self.platform = platform
@@ -118,6 +126,14 @@ class Provider(ABC):
             raise ProviderNotInstalled(
                 f"{self.label} is not installed or not on PATH. Install it from {self.install_url}")
         return found
+
+    def logo_file(self) -> Optional[Path]:
+        """The provider's logo file, or None when it declares none or the file is missing."""
+        name = self.logo
+        if not isinstance(name, str) or not name.endswith(".svg") or Path(name).name != name or "\\" in name:
+            return None
+        path = LOGOS / name
+        return path if path.is_file() else None
 
     def detect(self) -> Detection:
         path = self.platform.find_executable(self.hints)

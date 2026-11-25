@@ -3,7 +3,8 @@
 A *provider* is one agent tool (a "harness") installed and signed in on the
 user's machine: Codex, Claude Code and Antigravity today; GitHub Copilot CLI,
 Cursor CLI, Gemini CLI or OpenCode next. Each provider is one module in
-`commonroom/providers/` plus one entry in `BUILTIN_PROVIDERS`. The room, the
+`commonroom/providers/` plus one entry in `BUILTIN_PROVIDERS` (and, optionally,
+a logo file in `commonroom/providers/logos/`). The room, the
 setup screen, the model picker and the HTTP API pick it up automatically; no
 other file should mention your provider.
 
@@ -36,6 +37,7 @@ class Provider(ABC):
     hints: ClassVar[ExecutableHints]     # where to find the executable
     install_url: ClassVar[str]           # shown when the tool is missing
     version_args: ClassVar[Optional[tuple[str, ...]]] = ("--version",)  # None if it has no version flag
+    logo: ClassVar[Optional[str]] = None  # SVG file name in providers/logos/, e.g. "copilot.svg"
 
     def run_turn(self, request: TurnRequest, context: TurnContext) -> TurnResult: ...
     def list_models(self, workspace: Path, cancel: threading.Event) -> list[Model]: ...
@@ -190,14 +192,45 @@ without an id, or a malformed response is reported to the user as a discovery
 error with a Retry button; `model.id` is what `--model` (or equivalent)
 receives later.
 
+### Logo (optional)
+
+The UI shows each provider's logo next to its name: on the setup screen, in the
+provider picker, beside each agent in the left rail, on the agent preview card
+and before the model name on agent messages. To add one:
+
+1. Put the tool's official mark, unmodified, as an SVG in
+   `commonroom/providers/logos/` (for example `copilot.svg`).
+2. Declare `logo = "copilot.svg"` on the provider class. Only a plain file name
+   ending in `.svg` inside that folder is ever served.
+3. Add a line to `NOTICE` naming the mark, where you got it and its licence.
+
+Rules:
+
+- **Licence.** Only add a file you are allowed to redistribute under the
+  project's licence: the vendor's published brand asset, or a copy under CC0,
+  MIT or a similar permissive licence (the current marks come from the theSVG
+  project). Trademarks stay with their owners; we use them only to identify the
+  compatible tool. If unsure, leave the logo out.
+- **Square-ish, no padding, no text.** It is drawn at 14–20px.
+- **One-colour marks** should use `fill="currentColor"`. The UI then paints them
+  in the text colour, so they stay legible in light and dark themes. Coloured
+  marks are shown as they are. No scripts, external references or fonts.
+
+Without a logo the UI draws the provider's initial in a neutral rounded square,
+so a provider without one still looks finished.
+
+The API lists the logo as `logo` on each entry of `GET /api/providers` and of
+the setup scan (`GET /api/setup`), as `/api/providers/<id>/logo.svg`, or `null`.
+
 ## Step by step
 
 1. **Create `commonroom/providers/<id>.py`** with your provider class.
 2. **Register it**: add the class to `BUILTIN_PROVIDERS` in
    `commonroom/providers/registry.py`. The tuple order is the display order.
-3. **Write tests** in `tests/providers/test_<id>.py` (checklist below).
-4. **Update the README** install list with a link to the tool.
-5. **Check it by hand** (checklist below), then open a PR.
+3. **Optionally add a logo** (see "Logo" above).
+4. **Write tests** in `tests/providers/test_<id>.py` (checklist below).
+5. **Update the README** install list with a link to the tool.
+6. **Check it by hand** (checklist below), then open a PR.
 
 ## Minimal skeleton
 
@@ -317,6 +350,8 @@ signed in:
 
 - [ ] The setup screen lists the provider as installed, with its version.
       Uninstalled (or renamed off PATH), it shows the install link instead.
+- [ ] Its logo (or initial) shows on the setup screen, in the provider picker,
+      in the left rail and on its messages, in light and dark theme.
 - [ ] The model picker lists its models and effort levels; Retry works after a
       discovery failure.
 - [ ] Add an agent with it to a room; it replies to a message, and staying

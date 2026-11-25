@@ -111,14 +111,14 @@ class ServerTests(unittest.TestCase):
         self.assertTrue(setup["python"]["version"])
         self.assertEqual([(p["id"], p["installed"]) for p in setup["providers"]],
                          [("codex", True), ("claude", True), ("antigravity", False)])
-        self.assertEqual(set(setup["providers"][0]), {"id", "label", "installed", "installUrl", "path", "version", "error"})
+        self.assertEqual(set(setup["providers"][0]), {"id", "label", "installed", "installUrl", "path", "version", "error", "logo"})
         self.assertEqual(setup["settings"]["displayName"], "Sam")
         self.assertFalse(setup["setupComplete"])
 
         self.assertEqual(self.request("GET", "/api/providers")[1], {"providers": [
-            {"id": "codex", "label": "Codex", "installed": True},
-            {"id": "claude", "label": "Claude", "installed": True},
-            {"id": "antigravity", "label": "Antigravity", "installed": False}]})
+            {"id": "codex", "label": "Codex", "installed": True, "logo": None},
+            {"id": "claude", "label": "Claude", "installed": True, "logo": None},
+            {"id": "antigravity", "label": "Antigravity", "installed": False, "logo": None}]})
 
         status, updated = self.request("PUT", "/api/settings", {"displayName": "Samantha", "setupComplete": True})
         self.assertEqual(status, 200)
@@ -128,6 +128,39 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request("PUT", "/api/settings", {"lead": dict(LEAD, provider="nope")})[0], 400)
         self.assertEqual(self.request("PUT", "/api/settings", {"displayName": ""})[0], 400)
         self.assertEqual(self.request("GET", "/api/state")[1]["human"], {"id": HUMAN_ID, "name": "Samantha"})
+
+    def test_provider_logos_are_listed_and_served(self):
+        # A provider declaring a shipped logo gets a URL; the others (no logo) get null and a 404.
+        self.registry.providers["claude"].logo = "claude.svg"
+        self.registry.providers["antigravity"].logo = "missing.svg"
+        expected = {"codex": None, "claude": "/api/providers/claude/logo.svg", "antigravity": None}
+        self.assertEqual({p["id"]: p["logo"] for p in self.request("GET", "/api/providers")[1]["providers"]}, expected)
+        self.assertEqual({p["id"]: p["logo"] for p in self.request("GET", "/api/setup")[1]["providers"]}, expected)
+
+        response = urlopen(Request(self.endpoint + "/api/providers/claude/logo.svg"), timeout=5)
+        with response:
+            body = response.read()
+            self.assertEqual(response.headers.get_content_type(), "image/svg+xml")
+            self.assertIn("default-src 'none'", response.headers["Content-Security-Policy"])
+            self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+        logos = Path(__file__).resolve().parents[1] / "commonroom" / "providers" / "logos"
+        self.assertEqual(body, (logos / "claude.svg").read_bytes())
+
+        for path in ("/api/providers/codex/logo.svg", "/api/providers/antigravity/logo.svg",
+                     "/api/providers/nope/logo.svg", "/api/providers/logo.svg",
+                     "/api/providers/..%2Flogos%2Fclaude.svg/logo.svg", "/api/providers/claude%2F..%2Fclaude/logo.svg"):
+            self.assertEqual(self.request("GET", path)[0], 404, path)
+
+        # Only plain file names inside providers/logos/ are ever read.
+        for name in ("../logos/claude.svg", r"..\logos\claude.svg", "/etc/passwd.svg", "claude.png", ""):
+            self.registry.providers["claude"].logo = name
+            self.assertEqual(self.request("GET", "/api/providers/claude/logo.svg")[0], 404, name)
+
+        self.registry.providers["claude"].logo = "claude.svg"
+        self.assertEqual(self.request("GET", "/api/providers/claude/logo.svg",
+                                      headers={"Origin": "http://evil.test"})[0], 403)
+        self.assertEqual(self.request("GET", "/api/providers/claude/logo.svg",
+                                      headers={"Sec-Fetch-Site": "cross-site"})[0], 403)
 
     def test_rescan_redetects_and_rediscovers_models_for_installed_providers(self):
         self.scan.installed = {"claude"}

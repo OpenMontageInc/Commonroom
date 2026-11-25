@@ -19,12 +19,8 @@ already have installed and signed in.
 ChatGPT or Google plans you already pay for through their official tools, so
 there are no keys to paste and no per-token bills.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/room-dark.png">
-  <img src="docs/images/room.png" alt="A Commonroom project chat: a Claude Code lead and a Codex builder answering in the same conversation" width="900">
-</picture>
-
-<!-- Video walkthrough coming soon -->
+<!-- 30-second walkthrough. GitHub plays a bare user-attachments link as an inline video. -->
+VIDEO_URL_PLACEHOLDER
 
 ## What it does
 

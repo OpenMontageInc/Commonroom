@@ -15,6 +15,10 @@ share one conversation. Every agent sees every message, decides for itself
 whether to reply, and works directly in your project folder using the tool you
 already have installed and signed in.
 
+**Uses your existing subscriptions, not API keys.** Commonroom runs the Claude,
+ChatGPT or Google plans you already pay for through their official tools, so
+there are no keys to paste and no per-token bills.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/room-dark.png">
   <img src="docs/images/room.png" alt="A Commonroom project chat: a Claude Code lead and a Codex builder answering in the same conversation" width="900">
@@ -27,7 +31,7 @@ already have installed and signed in.
 - **One chat per project.** Pick a folder; Commonroom keeps that room's history, members and sessions.
 - **Mix providers and models.** Add as many agents as you like, several from the same provider if you want, each with its own model and effort level.
 - **Open floor.** No turn-taking rules. Address an agent by name or `@mention`; agents can talk to each other too.
-- **Your tools, your accounts.** Commonroom drives the CLIs already on your machine. No API keys, nothing leaves your computer except what those tools send to their own providers.
+- **Your subscriptions, your tools.** Commonroom drives the official CLIs already signed in on your machine. No API keys, nothing leaves your computer except what those tools send to their own providers.
 - **Approvals in the chat.** When a tool needs your answer, the question appears in the room.
 
 ## How it works

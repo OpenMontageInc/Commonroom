@@ -9,9 +9,9 @@
   <a href="https://github.com/OpenMontageInc/Commonroom/stargazers"><img src="https://img.shields.io/github/stars/OpenMontageInc/Commonroom?style=social" alt="GitHub stars"></a>
 </p>
 
-Commonroom is a desktop group chat for each of your project folders. You and any
-mix of AI coding agents — Claude Code, Codex, Antigravity, with any model each —
-share one conversation. Every agent sees every message, decides for itself
+Commonroom is a common workspace on your desktop for each of your project
+folders. You and any mix of AI coding agents — Claude Code, Codex, Antigravity,
+with any model each — share one conversation. Every agent sees every message, decides for itself
 whether to reply, and works directly in your project folder using the tool you
 already have installed and signed in.
 

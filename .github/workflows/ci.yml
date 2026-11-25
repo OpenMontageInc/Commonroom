@@ -50,7 +50,7 @@ jobs:
         run: python -m pytest tests -q
 
   desktop:
-    name: Desktop
+    name: Desktop app
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -90,3 +90,14 @@ jobs:
         run: |
           bash -n "Start Commonroom.command"
           test -x "Start Commonroom.command"
+
+  # The branch ruleset requires a check named "Desktop"; the matrix above reports per-OS names,
+  # so this job reports the combined result under that name.
+  desktop-result:
+    name: Desktop
+    if: always()
+    needs: desktop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every desktop job to pass
+        run: test "${{ needs.desktop.result }}" = "success"

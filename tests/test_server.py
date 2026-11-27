@@ -7,6 +7,7 @@ import time
 import unittest
 from pathlib import Path
 from urllib.error import HTTPError
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from commonroom import __version__
@@ -244,6 +245,37 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request("GET", "/api/state")[1]["messages"], [])
         self.assertEqual(self.request("POST", "/api/stop/999")[0], 400)
         self.assertEqual(self.request("POST", "/api/nowhere")[0], 404)
+
+    def upload(self, path, data, name, mime):
+        request = Request(self.endpoint + path, data=data, method="POST",
+                          headers={"Content-Type": mime, "X-Filename": quote(name)})
+        try:
+            response = urlopen(request, timeout=5)
+        except HTTPError as error:
+            response = error
+        with response:
+            return response.code, json.loads(response.read())
+
+    def test_files_are_uploaded_sent_and_served_safely(self):
+        prefix = f"/api/projects/{self.projects.default_id()}"
+        status, image = self.upload(prefix + "/attachments", b"\x89PNG data", "Pasted image.png", "image/png")
+        self.assertEqual(status, 200)
+        status, doc = self.upload(prefix + "/attachments", b"<script>alert(1)</script>", "notes é.html", "text/html")
+        self.assertEqual((status, doc["name"]), (200, "notes é.html"))
+
+        self.assertEqual(self.request("POST", prefix + "/messages",
+                                      {"text": "", "request_id": "files", "attachments": [image["id"], doc["id"]]})[0], 200)
+        message, = self.request("GET", prefix + "/state")[1]["messages"]
+        self.assertEqual([a["id"] for a in message["attachments"]], [image["id"], doc["id"]])
+
+        shown = urlopen(self.endpoint + prefix + f"/attachments/{image['id']}", timeout=5)
+        self.assertEqual((shown.headers.get_content_type(), shown.read()), ("image/png", b"\x89PNG data"))
+        saved = urlopen(self.endpoint + prefix + f"/attachments/{doc['id']}", timeout=5)
+        # A document never renders in the app: it downloads, under its own name.
+        self.assertEqual(saved.headers.get_content_type(), "application/octet-stream")
+        self.assertIn("attachment; filename*=UTF-8''notes%20%C3%A9.html", saved.headers["Content-Disposition"])
+        self.assertEqual(self.request("GET", prefix + "/attachments/..%2Froom.sqlite3")[0], 404)
+        self.assertEqual(self.request("GET", prefix + "/attachments/" + "0" * 32)[0], 404)
 
     def test_folder_picker_uses_the_platform(self):
         self.assertEqual(self.request("POST", "/api/projects/browse"), (200, {"path": None}))

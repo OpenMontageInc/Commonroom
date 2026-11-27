@@ -103,7 +103,10 @@ Existing routes keep their shapes unless listed here. Room routes work both as
 | GET | `/api/models` | `{models:{<provider>:[Model]}, errors:{}, loading:[], defaults:{<provider>:{model,effort}}}` — `defaults` now comes from `settings.lead` only (no external files). A provider is listed in `loading` until its first discovery finishes (all providers while the first machine scan runs; providers that are not installed never). |
 | POST | `/api/members` | `{name, provider, model, effort, role}`; provider validated against the registry |
 | PATCH | `/api/members/<id>` | any of `{name, model, effort, role}`. Changing model/effort keeps the session. |
-| GET | `/api/state` | as today, plus `human:{id:"human", name:<displayName>}`; each member gains `lead:bool` |
+| GET | `/api/state` | as today, plus `human:{id:"human", name:<displayName>}`; each member gains `lead:bool`. A message with files carries `attachments:[{id,name,size,mime,image}]` (absent when it has none). |
+| POST | `/api/attachments` | Raw file bytes; `X-Filename` (URI-encoded) names it, `Content-Type` is a hint for a missing extension. Up to 50 MB (413 beyond). Saves it under the room's `workspace/attachments/<id>/<name>` and returns `{id,name,size,mime,image}`. Nothing is delivered until a message names it. |
+| GET | `/api/attachments/<id>` | The stored file. PNG/JPEG/GIF/WebP/BMP are served inline; anything else downloads as `application/octet-stream` with `Content-Security-Policy: default-src 'none'`, so it never renders in the app. |
+| POST | `/api/messages` | `{text, request_id, mentions?, attachments?:[id]}`. `text` may be empty when `attachments` is not (up to 20 files). Agents get each file's absolute path in their prompt and in `room-history.jsonl`. |
 
 `Detection` = `{id,label,installed,installUrl,path,version,error}`; in `/api/setup` each entry also
 carries `logo` (as in `/api/providers`).

@@ -619,6 +619,52 @@ class RoomIntegrationTests(RoomTestCase):
         self.assertEqual(answers, ["yes"])
 
 
+class AttachmentTests(RoomTestCase):
+    def test_attached_files_reach_the_agent_with_a_path_it_can_open(self):
+        shot = self.room.save_attachment("Screen Shot.png", "image/png", b"\x89PNG fake")
+        brief = self.room.save_attachment("brief.pdf", "application/pdf", b"%PDF-1.7")
+        self.assertEqual((shot["name"], shot["mime"], shot["image"], shot["size"]), ("Screen Shot.png", "image/png", True, 9))
+        self.assertFalse(brief["image"])
+
+        self.room.send("", "files-only", attachments=[shot["id"], brief["id"]])
+        self.idle()
+
+        message, = self.room.state()["messages"]
+        self.assertEqual(message["text"], "")
+        self.assertEqual([a["name"] for a in message["attachments"]], ["Screen Shot.png", "brief.pdf"])
+        prompt = self.turns("Chief of Staff")[0].prompt
+        path = self.room.attachment_path(shot["id"])
+        self.assertEqual(path.read_bytes(), b"\x89PNG fake")
+        self.assertIn(json.dumps(str(path)), prompt)
+        self.assertIn("Some messages carry attachments", prompt)
+        self.assertEqual(self.archive_messages()[0]["attachments"][1]["path"], str(self.room.attachment_path(brief["id"])))
+
+    def test_plain_messages_do_not_mention_attachments(self):
+        self.send("Just text", "plain")
+        self.assertNotIn("attachments", self.turns("Chief of Staff")[0].prompt)
+        self.assertNotIn("attachments", self.room.state()["messages"][0])
+
+    def test_unsafe_names_unknown_ids_and_empty_files_are_refused_or_cleaned(self):
+        saved = self.room.save_attachment("..\\..\\evil:name?.txt", "text/plain", b"x")
+        self.assertEqual(saved["name"], "evil_name_.txt")
+        self.assertEqual(self.room.attachment_path(saved["id"]).parent.parent, self.room.attachments_dir)
+        self.assertEqual(self.room.save_attachment("", "image/png", b"x")["name"], "attachment.png")
+        self.assertIsNone(self.room.attachment_path("../room.sqlite3"))
+        with self.assertRaises(ValueError):
+            self.room.save_attachment("empty.txt", "text/plain", b"")
+        with self.assertRaises(ValueError):
+            self.room.send("Look", "bad-id", attachments=["0" * 32])
+        with self.assertRaises(ValueError):
+            self.room.send("", "nothing", attachments=[])
+
+    def test_rooms_from_before_attachments_still_open(self):
+        self.send("Before", "before")
+        with self.room.db:
+            self.room.db.execute("ALTER TABLE messages DROP COLUMN attachments")
+        self.reopen()
+        self.assertEqual([m["text"] for m in self.room.state()["messages"]], ["Before"])
+
+
 class LeadSeedingAndMigrationTests(unittest.TestCase):
     def setUp(self):
         folder = TemporaryDirectory()

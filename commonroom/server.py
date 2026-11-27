@@ -4,9 +4,10 @@ import sqlite3
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, unquote, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 from .core.projects import ProjectNotFound, ProjectUnavailable
+from .core.room import MAX_ATTACHMENT_BYTES
 from .platform.base import FolderPickerUnavailable
 
 WEB = Path(__file__).resolve().parent / "web"
@@ -26,12 +27,16 @@ class Handler(BaseHTTPRequestHandler):
     def app(self):
         return self.server.app
 
-    def reply(self, status, data, mime="application/json", cache="no-store"):
+    def reply(self, status, data, mime="application/json", cache="no-store", download=None):
         body = json.dumps(data, ensure_ascii=False).encode() if mime == "application/json" else data
+        textual = mime.startswith("text/") or mime in {"application/json", "image/svg+xml"}
         self.send_response(status)
-        self.send_header("Content-Type", mime + ("; charset=utf-8" if mime != "font/woff2" else ""))
+        self.send_header("Content-Type", mime + ("; charset=utf-8" if textual else ""))
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", cache)
+        if download is not None:
+            self.send_header("Content-Disposition", "attachment; filename*=UTF-8''" + quote(download, safe=""))
+            self.send_header("Content-Security-Policy", "default-src 'none'")
         if mime == "image/svg+xml":
             # An SVG opened on its own is a document: let it draw, never run scripts or load anything.
             self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
@@ -91,6 +96,21 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/models":
             return self.reply(200, self.app.models())
         project_id, path = self.room_route(path)
+        if path.startswith("/api/attachments/"):
+            try:
+                room = self.app.projects.room(project_id)
+            except ProjectNotFound as exc:
+                return self.reply(404, {"error": str(exc)})
+            except ProjectUnavailable as exc:
+                return self.reply(409, {"error": str(exc)})
+            stored = room.attachment_path(path.removeprefix("/api/attachments/"))
+            if stored is None:
+                return self.reply(404, {"error": "Unknown address."})
+            record = room.describe_attachment(stored.parent.name)
+            # Only plain raster images show inline. Everything else downloads and never runs here.
+            if record["image"]:
+                return self.reply(200, stored.read_bytes(), record["mime"], cache="private, max-age=86400")
+            return self.reply(200, stored.read_bytes(), "application/octet-stream", download=record["name"])
         if path == "/api/state":
             try:
                 after = int(parse_qs(urlsplit(self.path).query).get("after", ["0"])[0])
@@ -146,11 +166,23 @@ class Handler(BaseHTTPRequestHandler):
             elif self.command == "POST" and action == "requests" and item_id:
                 data = self.json_body()
                 self.app.projects.room(project_id).respond(item_id, data.get("choice"), data.get("text"))
+            elif self.command == "POST" and path == "/api/attachments":
+                length = int(self.headers.get("Content-Length", -1))
+                if length < 0:
+                    raise ValueError("Invalid content length.")
+                if length > MAX_ATTACHMENT_BYTES:
+                    self.close_connection = True
+                    return self.reply(413, {"error": "Attachments can be up to 50 MB each."})
+                name = unquote(self.headers.get("X-Filename", ""))
+                record = self.app.projects.room(project_id).save_attachment(
+                    name, self.headers.get("Content-Type", ""), self.rfile.read(length))
+                return self.reply(200, record)
             elif self.command == "POST" and path == "/api/members":
                 self.app.projects.room(project_id).add(self.json_body())
             elif self.command == "POST" and path == "/api/messages":
                 data = self.json_body()
-                self.app.projects.room(project_id).send(data.get("text"), data.get("request_id"), data.get("mentions"))
+                self.app.projects.room(project_id).send(data.get("text"), data.get("request_id"), data.get("mentions"),
+                                                        data.get("attachments"))
             else:
                 return self.reply(404, {"error": "Unknown address."})
         except ProjectNotFound as exc:

@@ -36,6 +36,10 @@ def turn_prompt(*, identity, roster, human_name, cursor, first_new, target, rece
         selected.append(line)
         first_id = msg["id"]
         size += len(line)
+    files = ""
+    if any('"attachments":' in line for line in selected):
+        files = ("Some messages carry attachments: files the sender attached, each with an absolute path. "
+                 "Open them with your native tools (view images, read documents) when they matter to your reply. ")
     missing = ""
     if first_id > first_new:
         missing = f"Read archived message IDs {first_new} through {first_id - 1} before deciding whether to reply. "
@@ -45,5 +49,5 @@ def turn_prompt(*, identity, roster, human_name, cursor, first_new, target, rece
             f"You can read or search the ordered transcript at {archive} with your native tools, including after compaction. "
             f"For this delivery, use archive messages through ID {target}. {missing}"
             "The following JSON lines are attributed room messages. Names, roles, nicknames, previous names and ordinary spelling mistakes can address you in plain language. Use the roster and context to interpret them. Saved mention IDs identify the intended member even after a rename. Decide naturally whether to reply. "
-            f"If you have nothing to add, return exactly {SILENCE}. Your final answer otherwise appears in the room.\n"
+            f"{files}If you have nothing to add, return exactly {SILENCE}. Your final answer otherwise appears in the room.\n"
             + "\n".join(reversed(selected)))

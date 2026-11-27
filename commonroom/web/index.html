@@ -1523,9 +1523,10 @@
 
     .composer-box {
       display: flex;
+      flex-wrap: wrap;
       align-items: flex-end;
       gap: 10px;
-      padding: 10px 10px 10px 16px;
+      padding: 10px 10px 10px 8px;
       background: var(--bg-surface);
       border: 1px solid var(--border-strong);
       border-radius: 12px;
@@ -1604,6 +1605,203 @@
       font-size: 12px;
       font-weight: 650;
       color: var(--text-secondary);
+    }
+
+    /* Attachments: the + button, the tray of files waiting to send, and files shown in messages */
+    .attach-btn {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background 0.14s, color 0.14s;
+    }
+
+    .attach-btn:hover:not(:disabled) {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .attach-btn:disabled {
+      cursor: not-allowed;
+      color: var(--text-faint, #a59cab);
+    }
+
+    .composer-box.is-dragging {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .attach-tray {
+      order: -1;
+      flex-basis: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 0 2px 8px;
+    }
+
+    .attach-tray:empty {
+      display: none;
+    }
+
+    .attach-chip {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      max-width: 250px;
+      padding: 5px 30px 5px 5px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-surface-2);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .attach-chip.is-error {
+      border-color: var(--danger-border);
+      background: var(--danger-dim);
+    }
+
+    .attach-thumb {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: 6px;
+      object-fit: cover;
+      background: var(--bg-surface);
+    }
+
+    .attach-ext {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      overflow: hidden;
+    }
+
+    .attach-chip-text {
+      display: grid;
+      min-width: 0;
+    }
+
+    .attach-chip-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .attach-chip-meta {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .attach-chip.is-error .attach-chip-meta {
+      color: var(--danger);
+    }
+
+    .attach-remove {
+      position: absolute;
+      top: 50%;
+      right: 5px;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--text-muted);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .attach-remove:hover {
+      background: var(--bg-active, var(--bg-hover));
+      color: var(--text-primary);
+    }
+
+    .msg-attachments {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 8px;
+      max-width: var(--measure);
+    }
+
+    .msg-attachments:first-child {
+      margin-top: 2px;
+    }
+
+    .msg-image {
+      display: block;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg-surface-2);
+      cursor: zoom-in;
+    }
+
+    .msg-image img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: min(340px, 62vw);
+      max-height: 260px;
+      object-fit: contain;
+    }
+
+    a.attach-chip {
+      padding-right: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    a.attach-chip:hover {
+      border-color: var(--border-strong);
+      background: var(--bg-hover);
+    }
+
+    dialog.image-viewer {
+      margin: auto;
+      padding: 0;
+      border: none;
+      background: transparent;
+      max-width: calc(100vw - 48px);
+      max-height: calc(100dvh - 48px);
+      overflow: visible;
+    }
+
+    dialog.image-viewer::backdrop {
+      background: rgba(10, 8, 12, 0.78);
+    }
+
+    dialog.image-viewer img {
+      display: block;
+      max-width: calc(100vw - 48px);
+      max-height: calc(100dvh - 48px);
+      object-fit: contain;
+      border-radius: 8px;
+      cursor: zoom-out;
     }
 
     /* Dialogs */
@@ -2273,11 +2471,18 @@
         <div class="composer-shell">
           <div id="mentionPopover" class="mention-popover" role="listbox" aria-label="Mention an agent"></div>
           <form id="composerForm" class="composer-box" autocomplete="off">
+            <div id="attachTray" class="attach-tray" role="list" aria-label="Files to send"></div>
+            <button id="attachBtn" class="attach-btn" type="button" aria-label="Attach files" title="Attach files, images or documents" disabled>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path d="M9 3.5v11M3.5 9h11"/>
+              </svg>
+            </button>
+            <input id="attachInput" type="file" multiple hidden tabindex="-1">
             <textarea
               id="composerInput"
               class="composer-input"
               rows="1"
-              placeholder="Message · @ to mention"
+              placeholder="Message · @ to mention · paste or drop files"
               aria-label="Message Commonroom"
               aria-autocomplete="list"
               aria-controls="mentionPopover"
@@ -2296,6 +2501,10 @@
       </div>
     </main>
   </div>
+
+  <dialog id="imageViewer" class="image-viewer" aria-label="Attached image">
+    <img alt="">
+  </dialog>
 
   <!-- Accessible Add Agent Dialog -->
   <dialog id="addAgentDialog" class="modal" aria-labelledby="addAgentTitle">
@@ -2546,6 +2755,7 @@
         sending: false,
         draftText: "",
         draftMentions: [],
+        attachments: [],
         pendingMessages: new Map(),
         pendingJobs: new Map(),
         renderedRequests: new Map(),
@@ -2630,6 +2840,12 @@
       const requestJumpBtn = document.getElementById("requestJumpBtn");
       const composerForm = document.getElementById("composerForm");
       const composerInput = document.getElementById("composerInput");
+      const attachTray = document.getElementById("attachTray");
+      const attachBtn = document.getElementById("attachBtn");
+      const attachInput = document.getElementById("attachInput");
+      const imageViewer = document.getElementById("imageViewer");
+      const MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024;
+      const MAX_MESSAGE_ATTACHMENTS = 20;
       const sendBtn = document.getElementById("sendBtn");
       const mentionPopover = document.getElementById("mentionPopover");
       const renameMemberDialog = document.getElementById("renameMemberDialog");
@@ -3847,10 +4063,13 @@
             body.appendChild(header);
           }
 
-          const contentEl = document.createElement("div");
-          contentEl.className = "msg-content";
-          renderSafeMessageContent(contentEl, msg.text, msg.mentions);
-          body.appendChild(contentEl);
+          if (msg.text || !msg.attachments?.length) {
+            const contentEl = document.createElement("div");
+            contentEl.className = "msg-content";
+            renderSafeMessageContent(contentEl, msg.text, msg.mentions);
+            body.appendChild(contentEl);
+          }
+          if (msg.attachments?.length) body.appendChild(renderMessageAttachments(msg.attachments));
 
           row.appendChild(body);
           messagesListEl.appendChild(row);
@@ -4337,6 +4556,7 @@
           restoreProjectDraft();
           composerInput.disabled = false;
           autoResizeComposer();
+          updateSendButton();
           triggerImmediatePoll();
         } catch (error) {
           syncBadgeEl.classList.add("hidden");
@@ -4615,8 +4835,12 @@
         e.preventDefault();
         const draft = composerInput.value;
         const draftMentions = state.draftMentions;
-        const { text, mentions, key } = outgoingDraft(draft, draftMentions);
-        if (!text || state.sending || !state.roomReady) return;
+        const { text, mentions, key: draftKey } = outgoingDraft(draft, draftMentions);
+        const draftAttachments = state.attachments;
+        if (draftAttachments.some((item) => item.status !== "ready")) return;
+        const attachments = draftAttachments.map((item) => item.record.id);
+        if ((!text && !attachments.length) || state.sending || !state.roomReady) return;
+        const key = attachments.length ? `${draftKey}|${attachments.join(",")}` : draftKey;
 
         closeMentionPopover();
         state.sending = true;
@@ -4626,19 +4850,22 @@
         state.pendingMessages.set(key, requestId);
         persistProjectDraft();
         setComposerDraft("", []);
+        state.attachments = [];
+        renderAttachTray();
         autoResizeComposer();
 
         try {
           const res = await fetch(roomApi("messages"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text, request_id: requestId, mentions })
+            body: JSON.stringify({ text, request_id: requestId, mentions, attachments })
           });
           if (!res.ok) {
             const errText = await safeErrorMessage(res);
             throw new Error(errText || `Failed to send (${res.status})`);
           }
           state.pendingMessages.delete(key);
+          for (const item of draftAttachments) if (item.preview) URL.revokeObjectURL(item.preview);
           persistProjectDraft();
           hideNetError();
           await triggerImmediatePoll();
@@ -4647,6 +4874,10 @@
           if (!composerInput.value) {
             setComposerDraft(draft, draftMentions);
             autoResizeComposer();
+          }
+          if (!state.attachments.length) {
+            state.attachments = draftAttachments;
+            renderAttachTray();
           }
           persistProjectDraft();
           showNetError(err.message || "Could not send message.");
@@ -4782,7 +5013,183 @@
       }
 
       function updateSendButton() {
-        sendBtn.disabled = !state.roomReady || state.sending || composerInput.value.trim().length === 0;
+        const files = state.attachments;
+        const waiting = files.some((item) => item.status !== "ready");
+        sendBtn.disabled = !state.roomReady || state.sending || waiting ||
+          (composerInput.value.trim().length === 0 && files.length === 0);
+        attachBtn.disabled = composerInput.disabled || state.sending;
+      }
+
+      // Attachments: files wait in the tray (already saved in this room) until the message is sent.
+      function formatBytes(size) {
+        if (!Number.isFinite(size)) return "";
+        if (size < 1024) return `${size} B`;
+        if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+        return `${(size / (1024 * 1024)).toFixed(size < 10 * 1024 * 1024 ? 1 : 0)} MB`;
+      }
+
+      function fileExtension(name) {
+        const dot = name.lastIndexOf(".");
+        return dot > 0 && dot < name.length - 1 ? name.slice(dot + 1, dot + 5) : "file";
+      }
+
+      function attachmentName(file) {
+        // A pasted screenshot arrives as "image.png" (Chromium) or with no name at all.
+        if (file.name && file.name !== "image.png") return file.name;
+        const now = new Date();
+        const two = (n) => String(n).padStart(2, "0");
+        const stamp = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())} at ` +
+          `${two(now.getHours())}.${two(now.getMinutes())}.${two(now.getSeconds())}`;
+        const ext = (file.type.split("/")[1] || "png").replace("jpeg", "jpg").replace(/[^a-z0-9]/gi, "") || "png";
+        return `Screenshot ${stamp}.${ext}`;
+      }
+
+      function addAttachments(fileList) {
+        if (!state.project || composerInput.disabled) return;
+        const files = [...fileList];
+        const room = MAX_MESSAGE_ATTACHMENTS - state.attachments.length;
+        if (files.length > room) showNetError(`You can attach up to ${MAX_MESSAGE_ATTACHMENTS} files to one message.`);
+        for (const file of files.slice(0, Math.max(0, room))) {
+          const name = attachmentName(file);
+          const item = {
+            key: generateRequestId(),
+            file,
+            name,
+            size: file.size,
+            image: /^image\/(png|jpe?g|gif|webp|bmp)$/i.test(file.type),
+            preview: "",
+            status: "uploading",
+            record: null,
+            error: ""
+          };
+          if (item.image) item.preview = URL.createObjectURL(file);
+          if (!file.size) {
+            item.status = "error";
+            item.error = "Empty file — folders cannot be attached";
+          } else if (file.size > MAX_ATTACHMENT_BYTES) {
+            item.status = "error";
+            item.error = "Too large (50 MB max)";
+          }
+          state.attachments.push(item);
+          if (item.status === "uploading") uploadAttachment(item);
+        }
+        renderAttachTray();
+        updateSendButton();
+      }
+
+      async function uploadAttachment(item) {
+        try {
+          const res = await fetch(roomApi("attachments"), {
+            method: "POST",
+            headers: {
+              "Content-Type": item.file.type || "application/octet-stream",
+              "X-Filename": encodeURIComponent(item.name)
+            },
+            body: item.file
+          });
+          if (!res.ok) throw new Error((await safeErrorMessage(res)) || `Upload failed (${res.status})`);
+          item.record = await res.json();
+          item.status = "ready";
+        } catch (err) {
+          item.status = "error";
+          item.error = err.message || "Upload failed";
+        }
+        renderAttachTray();
+        updateSendButton();
+      }
+
+      function removeAttachment(key) {
+        const item = state.attachments.find((entry) => entry.key === key);
+        if (item?.preview) URL.revokeObjectURL(item.preview);
+        state.attachments = state.attachments.filter((entry) => entry.key !== key);
+        renderAttachTray();
+        updateSendButton();
+        composerInput.focus();
+      }
+
+      function attachmentChip(name, size, { preview = "", meta = "", tag = "div" } = {}) {
+        const chip = document.createElement(tag);
+        chip.className = "attach-chip";
+        if (preview) {
+          const img = document.createElement("img");
+          img.className = "attach-thumb";
+          img.src = preview;
+          img.alt = "";
+          chip.appendChild(img);
+        } else {
+          const ext = document.createElement("span");
+          ext.className = "attach-ext";
+          ext.textContent = fileExtension(name);
+          ext.setAttribute("aria-hidden", "true");
+          chip.appendChild(ext);
+        }
+        const text = document.createElement("span");
+        text.className = "attach-chip-text";
+        const nameEl = document.createElement("span");
+        nameEl.className = "attach-chip-name";
+        nameEl.textContent = name;
+        nameEl.title = name;
+        const metaEl = document.createElement("span");
+        metaEl.className = "attach-chip-meta";
+        metaEl.textContent = meta || formatBytes(size);
+        text.append(nameEl, metaEl);
+        chip.appendChild(text);
+        return chip;
+      }
+
+      function renderAttachTray() {
+        attachTray.textContent = "";
+        for (const item of state.attachments) {
+          const meta = item.status === "uploading" ? "Adding…" : item.status === "error" ? item.error : formatBytes(item.size);
+          const chip = attachmentChip(item.name, item.size, { preview: item.preview, meta });
+          chip.setAttribute("role", "listitem");
+          if (item.status === "error") chip.classList.add("is-error");
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.className = "attach-remove";
+          remove.setAttribute("aria-label", `Remove ${item.name}`);
+          remove.title = "Remove";
+          remove.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 3l6 6M9 3l-6 6"/></svg>';
+          remove.addEventListener("click", () => removeAttachment(item.key));
+          chip.appendChild(remove);
+          attachTray.appendChild(chip);
+        }
+      }
+
+      function renderMessageAttachments(attachments) {
+        const list = document.createElement("div");
+        list.className = "msg-attachments";
+        for (const file of attachments) {
+          const url = roomApi(`attachments/${encodeURIComponent(file.id)}`);
+          if (file.image) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "msg-image";
+            button.title = file.name;
+            button.setAttribute("aria-label", `Open image ${file.name}`);
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = file.name;
+            img.loading = "lazy";
+            const nearBottom = () => feedScrollEl.scrollHeight - feedScrollEl.scrollTop - feedScrollEl.clientHeight < 320;
+            const stick = nearBottom();
+            img.addEventListener("load", () => { if (stick) scrollToBottom(); }, { once: true });
+            button.appendChild(img);
+            button.addEventListener("click", () => {
+              imageViewer.querySelector("img").src = url;
+              imageViewer.querySelector("img").alt = file.name;
+              imageViewer.showModal();
+            });
+            list.appendChild(button);
+          } else {
+            const link = attachmentChip(file.name, file.size, { tag: "a" });
+            link.href = url;
+            link.download = file.name;
+            link.title = `Download ${file.name}`;
+            list.appendChild(link);
+          }
+        }
+        return list;
       }
 
       function setComposerDraft(text, mentions) {
@@ -5444,6 +5851,54 @@
       });
 
       composerForm.addEventListener("submit", handleSendMessage);
+
+      attachBtn.addEventListener("click", () => attachInput.click());
+      attachInput.addEventListener("change", () => {
+        addAttachments(attachInput.files);
+        attachInput.value = "";
+        composerInput.focus();
+      });
+
+      composerInput.addEventListener("paste", (event) => {
+        const data = event.clipboardData;
+        const files = [...(data?.files || [])];
+        if (!files.length) return;
+        // Copying from Word, Excel or a web page also carries a picture of the selection.
+        // When there is real text, paste the text the person copied, not that picture.
+        if ((data.getData("text/plain") || "").trim() && files.every((file) => file.type.startsWith("image/"))) return;
+        event.preventDefault();
+        addAttachments(files);
+      });
+
+      // Drop files anywhere on the page; they go to the message being written.
+      let dragDepth = 0;
+      const carriesFiles = (event) => [...(event.dataTransfer?.types || [])].includes("Files");
+      document.addEventListener("dragenter", (event) => {
+        if (!carriesFiles(event)) return;
+        event.preventDefault();
+        dragDepth += 1;
+        if (!composerInput.disabled) composerForm.classList.add("is-dragging");
+      });
+      document.addEventListener("dragover", (event) => {
+        if (!carriesFiles(event)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = composerInput.disabled ? "none" : "copy";
+      });
+      document.addEventListener("dragleave", (event) => {
+        if (!carriesFiles(event)) return;
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (!dragDepth) composerForm.classList.remove("is-dragging");
+      });
+      document.addEventListener("drop", (event) => {
+        if (!carriesFiles(event)) return;
+        event.preventDefault();
+        dragDepth = 0;
+        composerForm.classList.remove("is-dragging");
+        if (!event.target.closest?.("dialog[open]")) addAttachments(event.dataTransfer.files);
+        composerInput.focus();
+      });
+
+      imageViewer.addEventListener("click", () => imageViewer.close());
 
       composerInput.addEventListener("beforeinput", (event) => {
         nextDraftEdit = {

@@ -1,6 +1,8 @@
 """One room: the shared transcript, its members and the delivery of every message to them."""
 import json
+import mimetypes
 import os
+import re
 import sqlite3
 import threading
 import uuid
@@ -17,6 +19,34 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
+MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024
+MAX_MESSAGE_ATTACHMENTS = 20
+IMAGE_TYPES = {"image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp"}
+_ATTACHMENT_ID = re.compile(r"[0-9a-f]{32}")
+# Characters Windows or macOS refuse in a file name, plus control characters.
+_UNSAFE_NAME = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+def attachment_name(name, mime=""):
+    """A file name safe on every OS that keeps what the sender called it."""
+    base = _UNSAFE_NAME.sub("_", str(name or "").replace("\\", "/").rsplit("/", 1)[-1]).strip(" .")
+    if not base:
+        base = "attachment"
+    stem, dot, suffix = base.rpartition(".")
+    if not dot or not stem:
+        stem, suffix = base, ""
+        guessed = mimetypes.guess_extension(mime.split(";")[0].strip()) if mime else None
+        if guessed:
+            suffix = guessed.lstrip(".")
+    suffix = suffix[:16]
+    stem = stem[:120 - len(suffix) - 1] or "attachment"
+    return f"{stem}.{suffix}" if suffix else stem
+
+
+def attachment_mime(name):
+    return mimetypes.guess_type(name)[0] or "application/octet-stream"
+
+
 class Room:
     """``providers`` offers ``get(id) -> Provider`` and ``ids()``; ``settings`` offers ``get() -> dict``."""
 
@@ -29,6 +59,8 @@ class Room:
         self.archive_workspace = self.folder / "workspace"
         self.archive_workspace.mkdir(exist_ok=True)
         self.archive = self.archive_workspace / "room-history.jsonl"
+        # Files people attach live beside the transcript archive, which every agent already reads.
+        self.attachments_dir = self.archive_workspace / "attachments"
         self.pending_requests = {}
         self.providers = providers
         self.settings = settings
@@ -66,10 +98,13 @@ class Room:
                 self.db.execute("ALTER TABLE members ADD COLUMN lead INTEGER NOT NULL DEFAULT 0")
                 if "permanent" in member_columns:
                     self.db.execute("UPDATE members SET lead=1 WHERE permanent=1")
-            if "mentions" not in {r[1] for r in self.db.execute("PRAGMA table_info(messages)")}:
+            message_columns = {r[1] for r in self.db.execute("PRAGMA table_info(messages)")}
+            if "mentions" not in message_columns:
                 self.db.execute("ALTER TABLE messages ADD COLUMN mentions TEXT NOT NULL DEFAULT '[]'")
                 for row in self.rows("SELECT id,text FROM messages WHERE instr(text,'@')>0"):
                     self.db.execute("UPDATE messages SET mentions=? WHERE id=?", (self.tagged(row["text"]), row["id"]))
+            if "attachments" not in message_columns:
+                self.db.execute("ALTER TABLE messages ADD COLUMN attachments TEXT NOT NULL DEFAULT '[]'")
             lead = settings.get().get("lead") if fresh else None
             if lead:
                 self.db.execute("INSERT INTO members(id,name,provider,model,effort,role,lead) VALUES(?,?,?,?,?,'',1)",
@@ -121,10 +156,51 @@ class Room:
         return tag_mentions(text, self.roster(), self.labels, selected)
 
     def history(self, after):
-        messages = self.rows("SELECT id,author,name,text,created,mentions FROM messages WHERE id>? ORDER BY id", (after,))
+        messages = self.rows("SELECT id,author,name,text,created,mentions,attachments FROM messages WHERE id>? ORDER BY id", (after,))
         for msg in messages:
             msg["mentions"] = json.loads(msg["mentions"])
+            attachments = json.loads(msg.pop("attachments"))
+            if attachments:
+                msg["attachments"] = attachments
         return messages
+
+    def save_attachment(self, name, mime, data):
+        """Keep one attached file in this room and describe it. Nothing is sent until a message names it."""
+        if not isinstance(data, (bytes, bytearray)) or not data:
+            raise ValueError("The attached file is empty.")
+        if len(data) > MAX_ATTACHMENT_BYTES:
+            raise ValueError("Attachments can be up to 50 MB each.")
+        clean = attachment_name(name, mime or "")
+        key = uuid.uuid4().hex
+        folder = self.attachments_dir / key
+        folder.mkdir(parents=True)
+        (folder / clean).write_bytes(bytes(data))
+        return self.describe_attachment(key)
+
+    def attachment_path(self, key):
+        """The stored file for an attachment ID, or None. IDs never become paths unchecked."""
+        if not isinstance(key, str) or not _ATTACHMENT_ID.fullmatch(key):
+            return None
+        try:
+            files = [item for item in (self.attachments_dir / key).iterdir() if item.is_file()]
+        except OSError:
+            return None
+        return files[0] if len(files) == 1 else None
+
+    def describe_attachment(self, key):
+        path = self.attachment_path(key)
+        if path is None:
+            raise ValueError("An attached file is no longer available. Attach it again.")
+        mime = attachment_mime(path.name)
+        return {"id": key, "name": path.name, "size": path.stat().st_size, "mime": mime, "image": mime in IMAGE_TYPES}
+
+    def located(self, attachments):
+        """Attachment records with the absolute path an agent opens them from."""
+        found = []
+        for item in attachments:
+            path = self.attachment_path(item.get("id"))
+            found.append(dict(item, path=str(path) if path else None))
+        return found
 
     @staticmethod
     def clean_name(name):
@@ -173,20 +249,25 @@ class Room:
     def refresh_archive(self):
         temp = self.archive.with_suffix(".tmp")
         with temp.open("w", encoding="utf-8") as stream:
-            for row in self.db.execute("SELECT id,name,author,text,created,mentions FROM messages ORDER BY id"):
-                message = dict(row)
-                message["mentions"] = json.loads(message["mentions"])
+            for row in self.db.execute("SELECT id,name,author,text,created,mentions,attachments FROM messages ORDER BY id"):
+                message = self.archived(dict(row))
                 stream.write(json.dumps(message, ensure_ascii=False) + "\n")
         os.replace(temp, self.archive)
         self.archive_dirty = False
+
+    def archived(self, message):
+        message["mentions"] = json.loads(message["mentions"])
+        attachments = json.loads(message.pop("attachments"))
+        if attachments:
+            message["attachments"] = self.located(attachments)
+        return message
 
     def archive_message(self, mid):
         try:
             if self.archive_dirty or not self.archive.is_file():
                 self.refresh_archive()
                 return
-            row = self.rows("SELECT id,name,author,text,created,mentions FROM messages WHERE id=?", (mid,))[0]
-            row["mentions"] = json.loads(row["mentions"])
+            row = self.archived(self.rows("SELECT id,name,author,text,created,mentions,attachments FROM messages WHERE id=?", (mid,))[0])
             with self.archive.open("a", encoding="utf-8") as stream:
                 stream.write(json.dumps(row, ensure_ascii=False) + "\n")
         except OSError:
@@ -229,14 +310,22 @@ class Room:
                 self.db.execute("INSERT INTO jobs(member,target,status) VALUES(?,?,'queued')", (key, mid))
             self.wake(key)
 
-    def send(self, text, request, mentions=None):
-        if not isinstance(text, str) or not text.strip() or not isinstance(request, str) or not request:
+    def send(self, text, request, mentions=None, attachments=None):
+        if text is None:
+            text = ""
+        if attachments is None:
+            attachments = []
+        if not isinstance(attachments, list) or len(attachments) > MAX_MESSAGE_ATTACHMENTS:
+            raise ValueError(f"Attach up to {MAX_MESSAGE_ATTACHMENTS} files to one message.")
+        if not isinstance(text, str) or not isinstance(request, str) or not request or not (text.strip() or attachments):
             raise ValueError("A message and request ID are required.")
+        files = [self.describe_attachment(key) for key in dict.fromkeys(attachments)]
         name = self.settings.get()["displayName"]
         with self.lock:
             with self.db:
-                cur = self.db.execute("INSERT OR IGNORE INTO messages(author,name,text,created,request_id,mentions) VALUES(?,?,?,?,?,?)",
-                                      (HUMAN_ID, name, text, now(), request, self.tagged(text, mentions)))
+                cur = self.db.execute("""INSERT OR IGNORE INTO messages(author,name,text,created,request_id,mentions,attachments)
+                    VALUES(?,?,?,?,?,?,?)""", (HUMAN_ID, name, text, now(), request, self.tagged(text, mentions),
+                                               json.dumps(files, ensure_ascii=False)))
                 if cur.rowcount:
                     self.enqueue(HUMAN_ID, cur.lastrowid)
             if cur.rowcount:
@@ -312,8 +401,13 @@ class Room:
         identity = next(m for m in roster if m["id"] == member["id"])
         cursor = member["cursor"]
         first_new = cursor + 1 if member["session"] else 1
-        recent = self.rows("""SELECT id,author,name,text,mentions FROM messages WHERE id BETWEEN ? AND ?
+        recent = self.rows("""SELECT id,author,name,text,mentions,attachments FROM messages WHERE id BETWEEN ? AND ?
             ORDER BY id DESC LIMIT ?""", (max(1, first_new - CONTEXT_TAIL), target, CONTEXT_MESSAGES))
+        for msg in recent:
+            attachments = json.loads(msg.pop("attachments"))
+            if attachments:
+                msg["attachments"] = [{"name": a["name"], "type": a["mime"], "path": a["path"]}
+                                      for a in self.located(attachments)]
         return turn_prompt(identity=identity, roster=roster, human_name=self.settings.get()["displayName"],
                            cursor=cursor, first_new=first_new, target=target, recent=recent,
                            archive=self.archive, project_path=self.project_path)
